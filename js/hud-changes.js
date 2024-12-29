@@ -52,7 +52,7 @@ export class HUDChanges {
 
                     var condition = CONFIG.statusEffects.find(c => c.id == statusId);
                     if (condition)
-                        title = i18n(condition.name);
+                        title = condition.name ? i18n(condition.name) : i18n(condition.label);
 
                     $(img).removeAttr('data-tooltip');
 
