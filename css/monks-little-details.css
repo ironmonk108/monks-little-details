@@ -132,11 +132,10 @@ body.reposition-collapse #sidebar.collapsed #sidebar-tabs a.collapse {
 }
 
 #token-hud.monks-little-details .status-effects {
-    /*top: -56px !important;*/
     width: unset !important;
     grid-template-columns: 130px 130px 130px 130px !important;
     font-size: 16px;
-    line-height: 24px;
+    line-height: var(--effect-size);
     text-align: left;
     background: rgba(0, 0, 0, 0.8);
 }
@@ -285,49 +284,34 @@ body.illandril-token-hud-scale--hud-button-scale #token-hud.monks-little-details
     opacity: 1;
 }
 
-.package-list .package .tag.success {
-    background-color: #5bb75b;
-    *background-color: #51a351;
-    background-image: -moz-linear-gradient(top, #62c462, #51a351);
-    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#62c462), to(#51a351));
-    background-image: -webkit-linear-gradient(top, #62c462, #51a351);
-    background-image: -o-linear-gradient(top, #62c462, #51a351);
-    background-image: linear-gradient(to bottom, #62c462, #51a351);
-    background-repeat: repeat-x;
-    border-color: #51a351 #51a351 #387038;
-    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff62c462', endColorstr='#ff51a351', GradientType=0);
-    filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+.package-list .package .package-metadata .tag {
+    padding: 0px 4px;
+    border: 1px solid #2e6da4;
+    border-radius: 2px;
+    background-color: #337ab7;
+    color: #000;
+    margin: 0px 1px;
+    cursor: pointer;
 }
 
-.package-list .package .tag.info {
-    background-color: #49afcd;
-    *background-color: #2f96b4;
-    background-image: -moz-linear-gradient(top, #5bc0de, #2f96b4);
-    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#5bc0de), to(#2f96b4));
-    background-image: -webkit-linear-gradient(top, #5bc0de, #2f96b4);
-    background-image: -o-linear-gradient(top, #5bc0de, #2f96b4);
-    background-image: linear-gradient(to bottom, #5bc0de, #2f96b4);
-    background-repeat: repeat-x;
-    border-color: #2f96b4 #2f96b4 #1f6377;
-    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff5bc0de', endColorstr='#ff2f96b4', GradientType=0);
-    filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+.package-list .package .package-metadata .tag.warning {
+    background-color: #f0ad4e;
+    border-color: #eea236;
 }
 
-.package-list .package .tag.danger {
-    background-color: #da4f49;
-    *background-color: #bd362f;
-    background-image: -moz-linear-gradient(top, #ee5f5b, #bd362f);
-    background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ee5f5b), to(#bd362f));
-    background-image: -webkit-linear-gradient(top, #ee5f5b, #bd362f);
-    background-image: -o-linear-gradient(top, #ee5f5b, #bd362f);
-    background-image: linear-gradient(to bottom, #ee5f5b, #bd362f);
-    background-repeat: repeat-x;
-    border-color: #bd362f #bd362f #802420;
-    border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
-    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ffee5f5b', endColorstr='#ffbd362f', GradientType=0);
-    filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+.package-list .package .package-metadata .tag.success {
+    background-color: #5cb85c;
+    border-color: #4cae4c;
+}
+
+.package-list .package .package-metadata .tag.info {
+    background-color: #5bc0de;
+    border-color: #46b8da;
+}
+
+.package-list .package .package-metadata .tag.danger {
+    background-color: #d9534f;
+    border-color: #d43f3a;
 }
 
 .ignoring-update {
@@ -346,8 +330,8 @@ body.illandril-token-hud-scale--hud-button-scale #token-hud.monks-little-details
     color: darkred;
 }
 
-body.change-windows:not(.system-forbidden-lands) .window-app:not(.image-popout) {
-    background-color: var(--color-border-dark-5);
+body.change-windows.theme-dark:not(.system-forbidden-lands) .application:not(.image-popout) {
+    background: var(--color-cool-5);
 }
 
 body.change-windows:not(.system-forbidden-lands) .window-app:not(.dnd5e2.character) > header {
@@ -359,6 +343,22 @@ body.change-windows:not(.system-forbidden-lands) .window-app:not(.dnd5e2.charact
 
 body.change-windows #context-menu:not(.dnd5e2) {
     background: #0f002c;
+}
+
+body.change-chat .chat-sidebar:not(.sidebar-popout) {
+    background: var(--sidebar-background, var(--color-cool-5-90))
+}
+
+body.change-chat #sidebar-content #chat .chat-scroll {
+    direction: ltr;
+}
+
+body.change-chat .chat-sidebar .chat-scroll {
+    mask-image: linear-gradient(to bottom, transparent 0%,black 5%);
+}
+
+body.change-chat .chat-sidebar .chat-scroll.scrolled {
+    mask-image: linear-gradient(to bottom, transparent 0%,black 5%,black 95%,transparent 100%);
 }
 
 #darkness-progress {
@@ -405,23 +405,22 @@ body.change-windows #context-menu:not(.dnd5e2) {
     transform-origin: center left;
 }
 
-.filepicker.use-quicklinks .filepicker-body input[name="target"] {
+#file-picker.use-quicklinks input[name="target"] {
     margin-right: 0px;
     border-top-right-radius: 0px;
     border-bottom-right-radius: 0px;
 }
 
-.filepicker .filepicker-header .quick-links {
+#file-picker .subheader .quick-links {
     flex: 0 0 32px;
     text-align: center;
     border-top-left-radius: 0px;
     border-bottom-left-radius: 0px;
-    margin-right: 5px !important;
     margin-left: -10px;
     padding: 4px 0px;
 }
 
-.filepicker .filepicker-header .quick-link-input-button {
+#file-picker .subheader .quick-link-input-button {
     background: transparent;
     border: none;
     float: left;
@@ -429,10 +428,10 @@ body.change-windows #context-menu:not(.dnd5e2) {
     top: 0px;
     left: 4px;
     width: 20px;
-    padding-left: 1px;
+    padding-left: 5px;
 }
-.filepicker .filepicker-header .quick-link-input-button:hover,
-.filepicker .filepicker-header .quick-link-input-button:focus {
+#file-picker .subheader .quick-link-input-button:hover,
+#file-picker .subheader .quick-link-input-button:focus {
     box-shadow: none;
 }
 
@@ -444,10 +443,10 @@ body.change-windows #context-menu:not(.dnd5e2) {
     position: absolute;
     float: left;
     left: 0px;
-    top: calc(100% - 2px);
+    top: calc(100% - 1px);
     background: url(../../../ui/parchment.jpg) repeat;
     border: 1px solid #808080;
-    width: calc(100% - 5px);
+    width: calc(100% - 2px);
     border-bottom-right-radius: 5px;
     border-bottom-left-radius: 5px;
     list-style: none;
@@ -675,4 +674,83 @@ body.change-windows #context-menu:not(.dnd5e2) {
 
 textarea[name="command"] {
     tab-size: 20px;
+}
+
+.compendium-directory .directory-list .directory-item.scene {
+    position: relative;
+    height: calc(var(--sidebar-item-height) + 2px);
+}
+
+.compendium-directory .directory-list .directory-item.scene img {
+    flex: 1;
+    object-fit: cover !important;
+}
+
+.compendium-directory .directory-list .directory-item.scene div {
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    text-shadow: 1px 1px 3px #000;
+    color: #f0f0e0;
+    margin: 0px;
+    cursor: pointer;
+}
+
+.compendium-directory .directory-list .directory-item.scene div a {
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+
+.compendium-directory .directory-list .directory-item.scene div i {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    padding: 4px;
+}
+
+#sidebar .tabs button[data-action="tab"].highlight {
+    background: var(--color-warm-2);
+}
+
+.monks-little-details.edit-effects .effects header,
+.monks-little-details.edit-effects .effects ol {
+    align-items: center;
+    display: grid;
+    gap: 0.25rem;
+    grid-template-columns: 6rem 16rem 23rem 1.5rem;
+    margin: 0;
+    padding: 2px;
+    position: relative;
+    text-align: left;
+}
+
+.monks-little-details.edit-effects .effects ol li {
+    display: contents;
+}
+
+.monks-little-details.edit-effects .effects .controls {
+    text-align: right;
+}
+
+#add-effect-dialog section {
+    display: flex;
+    gap: 0.5rem;
+    flex-direction: column;
+    flex-wrap: nowrap;
+}
+
+.compendium-shortcut-links {
+    gap: 0.5rem;
+}
+
+.filter-compendium {
+    cursor: pointer;
+}
+
+.filter-compendium.active {
+    background: var(--button-hover-background-color);
 }

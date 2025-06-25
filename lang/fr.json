@@ -1,6 +1,4 @@
 {
-	"MonksLittleDetails.swap-buttons.name": "Échange l'emplacement du bouton de cible et celui des paramètres sur le Token HUD",
-	"MonksLittleDetails.swap-buttons.hint": "Je pense que le bouton des paramètres est plus logique en bas qu'au milieu.",
 	"MonksLittleDetails.alter-hud.name": "Modifier les effets de statut du Token HUD",
 	"MonksLittleDetails.alter-hud.hint": "Modifier le Token HUD pour montrer les effets détaillés de l'état et permettre d'effacer tous les effets.",
 	"MonksLittleDetails.alter-hud-colour.name": "Effets d'état du Token HUD mis en évidence",
@@ -23,8 +21,6 @@
 	"MonksLittleDetails.key-swap-tool.hint": "Permet de passer d'un outil à l'autre en appuyant sur une touche.  Nécessite le module 'Library : DF Hotkeys' pour fonctionner",
 	"MonksLittleDetails.sort-by-columns.name": "Trier par colonnes",
 	"MonksLittleDetails.sort-by-columns.hint": "Trier les effets d'état du Token hud par colonnes au lieu de lignes",
-	"MonksLittleDetails.move-pause.name": "Déplacez l'icône Pause vers le haut",
-	"MonksLittleDetails.move-pause.hint": "Déplacez l'icône Pause vers le haut de l'écran pour qu'elle soit plus centrée et pour éviter de se demander pourquoi les jetons ne peuvent pas bouger.",
 	"MonksLittleDetails.sort-statuses.name": "Trier les statues",
 	"MonksLittleDetails.sort-statuses.hint": "Trier les statuts du Token dans le Token HUD.",
 	"MonksLittleDetails.token-highlight-remove.name": "Effacer la mise en évidence du Token",

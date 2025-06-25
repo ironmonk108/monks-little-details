@@ -1,6 +1,4 @@
 {
-	"MonksLittleDetails.swap-buttons.name": "トークンHUDの目標選択ボタンと設定ボタンを入れ替える",
-	"MonksLittleDetails.swap-buttons.hint": "設定ボタンは下にあったほうがいいと思うんです。",
 	"MonksLittleDetails.alter-hud.name": "トークンHUDの状態一覧を変更する",
 	"MonksLittleDetails.alter-hud.hint": "トークンHUDの状態一覧に詳細情報を表示します。また、すべての状態を削除する機能を追加します。",
 	"MonksLittleDetails.alter-hud-colour.name": "トークンHUDの状態一覧にハイライトを追加",
@@ -26,8 +24,6 @@
 	"MonksLittleDetails.key-swap-tool.hint": "設定したホットキーでツールを切り替えます。",
 	"MonksLittleDetails.sort-by-columns.name": "状態一覧の表示順を縦並びにする",
 	"MonksLittleDetails.sort-by-columns.hint": "トークンHUDから開く状態一覧の表示順を、横並びから縦並びに変更します。",
-	"MonksLittleDetails.move-pause.name": "一時停止アイコンを上に移動する",
-	"MonksLittleDetails.move-pause.hint": "一時停止のアイコンを画面の上に移動し、より中央に表示します。これはコマを動かせないことに、プレイヤーが疑問を感じないようにするためです。",
 	"MonksLittleDetails.sort-statuses.name": "状態一覧の並び替え",
 	"MonksLittleDetails.sort-statuses.hint": "トークンHUDの状態一覧を指定した方法で並び替えます。",
 	"MonksLittleDetails.find-my-token.name": "トークンを探す",
@@ -37,8 +33,6 @@
 
 	"MonksLittleDetails.module-management-changes.name": "”モジュールの管理”画面の修正",
 	"MonksLittleDetails.module-management-changes.hint": "モジュールの依存関係を色分け表示し、クリックで依存先に移動できるようにします。",
-	"MonksLittleDetails.macro-tabs.name": "マクロでタブ文字",
-	"MonksLittleDetails.macro-tabs.hint": "マクロ編集時に［Tab］キーを押すと、次のフィールドに遷移するのではなく新しいタブ文字が入力されるようにします。",
 	"MonksLittleDetails.pan-to-combatant.name": "ターン中のコマにパンする",
 	"MonksLittleDetails.pan-to-combatant.hint": "ターンを開始したコマに、GMの画面がパンするようになります。",
 	"MonksLittleDetails.large-print.name": "ターン通知を大きく表示",

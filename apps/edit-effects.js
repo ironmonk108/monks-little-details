@@ -1,98 +1,129 @@
 import { MonksLittleDetails, log, setting, i18n } from '../monks-little-details.js';
+const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api
 
-export class EditEffects extends FormApplication {
-    constructor(object) {
-        super(object);
+export class EditEffects extends HandlebarsApplicationMixin(ApplicationV2) {
+    constructor(object, options) {
+        super(object, options);
+
+        this.effects = foundry.utils.duplicate(setting("additional-effects"));
     }
 
-    /** @override */
-    static get defaultOptions() {
-        return foundry.utils.mergeObject(super.defaultOptions, {
-            id: "edit-effects",
-            classes: ["form", "edit-effects", "monks-little-details"],
-            title: i18n("MonksLittleDetails.EditEffects"),
-            template: "modules/monks-little-details/templates/edit-effects.html",
-            width: 800,
-            submitOnChange: false,
+    static DEFAULT_OPTIONS = {
+        id: "edit-effects",
+        tag: "form",
+        classes: ["edit-effects", "monks-little-details"],
+        window: {
+            contentClasses: ["standard-form"],
+            icon: "fa-solid fa-align-justify",
+            resizable: false,
+            title: "MonksLittleDetails.EditEffects",
+        },
+        actions: {
+            reset: EditEffects.resetEffects,
+            addEffect: EditEffects.addEffect,
+            deleteEffect: EditEffects.removeEffect,
+        },
+        form: {
             closeOnSubmit: true,
-            scrollY: [".item-list"]
-        });
+            handler: EditEffects.onSubmitDocumentForm
+        },
+        position: {
+            width: 800
+        }
+    };
+
+    static PARTS = {
+        main: {
+            root: true,
+            template: "modules/monks-little-details/templates/edit-effects.html",
+            scrollable: [".effects-list"]
+        }
+    };
+
+    async _prepareContext(options) {
+        const context = await super._prepareContext(options);
+
+        context.effects = this.effects;
+
+        return context;
     }
 
-    getData(options) {
-        this.effects = this.effects || setting("additional-effects");
-        return foundry.utils.mergeObject(super.getData(options),
-            {
-                effects: this.effects
-            }
-        );
-    }
-
-    _updateObject() {
-        let data = this.effects.filter(c => !!c.id && !!c.label).map(c => { c.name = c.label; return c; });
+    static async onSubmitDocumentForm(event, form, formData, options = {}) {
+        this._update();
+        let data = this.effects.filter(c => !!c.id && !!c.name);
         game.settings.set('monks-little-details', 'additional-effects', data);
+
+        for(let effect of data) {
+            CONFIG.statusEffects.findSplice(s => s.id === effect.id);
+        }
+
+        CONFIG.statusEffects = CONFIG.statusEffects.concat(data);
+
         this.submitting = true;
     }
 
-    resetEffects() {
+    _update() {
+        const form = this.form;
+        const formData = new foundry.applications.ux.FormDataExtended(form);
+
+        this.effects = Object.values(foundry.utils.expandObject(formData.object)?.effects || {}) || [];
+    }
+
+    static resetEffects() {
         this.effects = game.settings.settings.get('monks-little-details.additional-effects').default;
-        this.refresh();
-    }
-
-    addEffect(event) {
-        this.effects.push({ id: "", name: "", icon: "" });
-        this.refresh();
-    }
-
-    changeData(event) {
-        let effectid = event.currentTarget.closest('li.item').dataset.id;
-        let prop = $(event.currentTarget).attr("name");
-        if (prop.startsWith("icon"))
-            prop = "icon";
-
-        let effect = this.effects.find(c => c.id == effectid);
-        if (effect) {
-            let val = $(event.currentTarget).val();
-            if (prop == "id") {
-                val = val.replace(/[^a-z]/gi, '');
-                $(event.currentTarget).val(val);
-                if (!!this.effects.find(c => c.id == val)) {
-                    $(event.currentTarget).val(effectid)
-                    return;
-                }
-                let parent = $(event.currentTarget.closest('li.item'));
-                parent.attr("data-id", val);
-                $('.item-icon input', parent).attr('name', `icon-${val}`);
-                $('.item-icon button', parent).attr('data-target', `icon-${val}`);
-            }
-
-            effect[prop] = val;
-        }
-    }
-
-    removeEffect() {
-        let effectid = event.currentTarget.closest('li.item').dataset.id;
-        this.effects.findSplice(s => s.id === effectid);
-        this.refresh();
-    }
-
-    refresh() {
         this.render(true);
-        let that = this;
-        window.setTimeout(function () {
-            that.setPosition({ height: 'auto' });
-        }, 100);
     }
 
-    activateListeners(html) {
-        super.activateListeners(html);
+    static async addEffect(event) {
+        let data = {
+            fields: {
+                id: new foundry.data.fields.StringField({
+                    label: "Effect Id",
+                }, { name: "id" }),
+                name: new foundry.data.fields.StringField({
+                    label: "Name",
+                }, { name: "name" }),
+                img: new foundry.data.fields.FilePathField({
+                    initial: "",
+                    categories: ["IMAGE"],
+                    label: "Image",
+                }, { name: "img" })
+            }
+        }
+        let content = await foundry.applications.handlebars.renderTemplate("modules/monks-little-details/templates/add-effect.hbs", data);
+        foundry.applications.api.DialogV2.wait({
+            id: "add-effect-dialog",
+            window: {
+                title: `Add Effect`,
+            },
+            position: {
+                width: 400
+            },
+            content,
+            buttons: [{
+                action: "automatic",
+                label: "Save",
+                icon: "far fa-save",
+                callback: async (event, button) => {
+                    let form = $(button.form);
 
-        $('button[name="submit"]', html).click(this._onSubmit.bind(this));
-        $('button[name="reset"]', html).click(this.resetEffects.bind(this));
+                    let id = form.find("input[name='id']").val();
+                    let name = form.find("input[name='name']").val();
 
-        $('input[name]', html).change(this.changeData.bind(this));
+                    let img = form.find("file-picker[name='img'] > input").val();
+                    this._update();
+                    this.effects.push({ id, name, img });
+                    this.render(true);
+                },
+                default: true
+            }],
+        });
+    }
 
-        $('.item-delete', html).click(this.removeEffect.bind(this));
-        $('.item-add', html).click(this.addEffect.bind(this));
-    };
+    static removeEffect(event) {
+        this._update();
+        let effectId = event.target.closest('li.effect').dataset.effectId;
+        this.effects.findSplice(s => s.id === effectId);
+        this.render(true);
+    }
 }

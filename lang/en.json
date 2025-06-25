@@ -1,6 +1,4 @@
 {
-	"MonksLittleDetails.swap-buttons.name": "Swap target and settings button on the Token HUD",
-	"MonksLittleDetails.swap-buttons.hint": "I think the settings button makes more sense on the bottom rather than in the middle.",
 	"MonksLittleDetails.alter-hud.name": "Alter the Token HUD status effects",
 	"MonksLittleDetails.alter-hud.hint": "Alter the Token HUD to show detailed status effects.",
 	"MonksLittleDetails.alter-hud-colour.name": "Highlight Token HUD status effects",
@@ -15,18 +13,20 @@
 	"MonksLittleDetails.core-css-changes.hint": "Update some of the core css to display things a little better",
 	"MonksLittleDetails.window-css-changes.name": "Change Window Styles",
 	"MonksLittleDetails.window-css-changes.hint": "The semi-transparent background of the windows makes it hard to see sometimes.",
+	"MonksLittleDetails.chat-css-changes.name": "Change Chat Background",
+	"MonksLittleDetails.chat-css-changes.hint": "Add a solid background to the chat window to make it easier to see messages",
 	"MonksLittleDetails.movement-key.name": "Movement Key",
 	"MonksLittleDetails.movement-key.hint": "Set the key to hold to immediately move tokens to a new location rather than walking them there",
 	"MonksLittleDetails.show-notify.name": "Retain Notify",
 	"MonksLittleDetails.show-notify.hint": "Leave the chat notify icon on if you're on a different tab and a message arrives.",
+	"MonksLittleDetails.highlight-notify.name": "Highlight Notify",
+	"MonksLittleDetails.highlight-notify.hint": "Instead of a pip to notify you, highlight the entire tab button to show activity",
 	"MonksLittleDetails.compendium-view-artwork.name": "Compendium Scene view artwork",
 	"MonksLittleDetails.compendium-view-artwork.hint": "Open the scene artwork if you click on the scene name",
 	"MonksLittleDetails.key-swap-tool.name": "Use keys to swap tools",
 	"MonksLittleDetails.key-swap-tool.hint": "Allow the swapping between tools by pressing a key.",
 	"MonksLittleDetails.sort-by-columns.name": "Sort by columns",
 	"MonksLittleDetails.sort-by-columns.hint": "Sort token hud status effect by columns instead of rows",
-	"MonksLittleDetails.move-pause.name": "Move the Pause icon up",
-	"MonksLittleDetails.move-pause.hint": "Move the Pause icon up the screen so that it is more centered and to avoid wondering why tokens can't move.",
 	"MonksLittleDetails.sort-statuses.name": "Sort Statuses",
 	"MonksLittleDetails.sort-statuses.hint": "Sort the Token statuses in the Token HUD",
 	"MonksLittleDetails.find-my-token.name": "Find my Token",
@@ -35,8 +35,6 @@
 	"MonksLittleDetails.reposition-collapse.hint": "Reposition the sidebar collapse button so that it always stays in the same general location",
 	"MonksLittleDetails.module-management-changes.name": "Module Management Changes",
 	"MonksLittleDetails.module-management-changes.hint": "Add colouring to denote module dependency availability and click on dependencies to scroll to them.",
-	"MonksLittleDetails.macro-tabs.name": "Macro Tabs",
-	"MonksLittleDetails.macro-tabs.hint": "Allow tabs in the macro editor to add a tab rather than tabbing to the next field",
 	"MonksLittleDetails.pan-to-combatant.name": "Pan to Combatant",
 	"MonksLittleDetails.pan-to-combatant.hint": "Pan to the current combatant for the GM",
 	"MonksLittleDetails.large-print.name": "Large Size",
@@ -63,6 +61,8 @@
 	"MonksLittleDetails.pause-border-colour.hint": "Change the colour of the pause border.",
 	"MonksLittleDetails.dual-monitor.name": "Dual Monitor",
 	"MonksLittleDetails.dual-monitor.hint": "Using a dual monitor, have a new pop up window center to one side or the other",
+	"MonksLittleDetails.lighting-progress.name": "Lighting Progress",
+	"MonksLittleDetails.lighting-progress.hint": "Show a progress bar when lighting is being updated",
 
 	"MonksLittleDetails.SystemChanges": "System Changes",
 	"MonksLittleDetails.AddedFeatures": "Added Features",
@@ -122,5 +122,10 @@
 	"SIDEBAR.SortModeType": "Sorting By Type",
 	"SIDEBAR.SortModeSource": "Sorting By Source",
 	"FOLDER.SortType": "Type",
-	"FOLDER.SortSource": "Source"
+	"FOLDER.SortSource": "Source",
+
+	"MonksLittleDetails.UPDATEIMAGES.TABS": {
+		"details": "Details",
+		"results": "Results"
+	}
 }

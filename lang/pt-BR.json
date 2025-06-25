@@ -1,6 +1,4 @@
 {
-	"MonksLittleDetails.swap-buttons.name": "Alternar os botões de 'mira' e 'configuraçõs' na HUD do Token",
-	"MonksLittleDetails.swap-buttons.hint": "Eu acredito que faz mais sentido o botão de 'configurações' estar no na parte de baixo e não no meio.",
 	"MonksLittleDetails.alter-hud.name": "Alterar a HUD de Efeitos/Condições do Token",
 	"MonksLittleDetails.alter-hud.hint": "Alterar a HUD do Token para mostrar Efeitos e Condições mais detalhadas e permite limpar todos os efeitos.",
 	"MonksLittleDetails.alter-hud-colour.name": "Realçar a HUD de Efeitos/Condições do Token",
@@ -25,8 +23,6 @@
 	"MonksLittleDetails.sort-by-columns.hint": "Organizar efeitos e condições na HUD do Token por colunas em vez de linhas",
 	"MonksLittleDetails.add-combat-bars.name": "Adicionar Barras no Combate",
 	"MonksLittleDetails.add-combat-bars.hint": "Usar uma configuração diferente para barras de recurso enquanto o token estiver em combate",
-	"MonksLittleDetails.move-pause.name": "Mover o ícone de Pausa para cima",
-	"MonksLittleDetails.move-pause.hint": "Mover o ícone de Pausa um pouco mais para cima na tela para que esteja mais centralizada para evitar se perguntar por que os tokens não podem se mover.",
 	"MonksLittleDetails.sort-statuses.name": "Organizar Efeitos/Condições",
 	"MonksLittleDetails.sort-statuses.hint": "Organizar efeitos e condições do token na HUD do Token",
 	"MonksLittleDetails.find-my-token.name": "Encontrar meu Token",
@@ -35,8 +31,6 @@
 	"MonksLittleDetails.reposition-collapse.hint": "Reposicionar o botão de recolher da barra lateral para que esteja sempre na mesma posição",
 	"MonksLittleDetails.module-management-changes.name": "Mudanças de Gerenciamento de Módulo",
 	"MonksLittleDetails.module-management-changes.hint": "Adicione coloração para indicar a disponibilidade de dependência do módulo e clique nas dependências para rolar até elas.",
-	"MonksLittleDetails.macro-tabs.name": "Tab em Macro",
-	"MonksLittleDetails.macro-tabs.hint": "Permitir que o uso do tab no editor de macro adicione espaço em vez de alterar o foco para o próximo campo",
 
 	"MonksLittleDetails.SystemChanges": "Alterações do Sistema",
 	"MonksLittleDetails.AddedFeatures": "Recursos Adicionados",

@@ -1,6 +1,4 @@
 {
-	"MonksLittleDetails.swap-buttons.name": "Scambia pulsante bersaglio e impostazioni sull'HUD del token",
-	"MonksLittleDetails.swap-buttons.hint": "Penso che il pulsante delle impostazioni abbia più senso in basso piuttosto che al centro.",
 	"MonksLittleDetails.alter-hud.name": "Effetti modificati sull'HUD del token",
 	"MonksLittleDetails.alter-hud.hint": "Modifica l'HUD del token per mostrare gli effetti di stato dettagliati e consentire di cancellare tutti gli effetti.",
 	"MonksLittleDetails.alter-hud-colour.name": "Evidenzia gli effetti sull'HUD del token",
@@ -25,8 +23,6 @@
 	"MonksLittleDetails.key-swap-tool.hint": "Consentire lo scambio tra gli strumenti premendo un tasto. Richiede il modulo 'Library: DF Hotkeys' per funzionare.",
 	"MonksLittleDetails.sort-by-columns.name": "Ordina per colonne",
 	"MonksLittleDetails.sort-by-columns.hint": "Ordina gli effetti del token hud per colonne anziché per righe",
-	"MonksLittleDetails.move-pause.name": "Alza l'icona di Pausa",
-	"MonksLittleDetails.move-pause.hint": "Alza l'icona Pausa sullo schermo in modo che sia più centrata e per evitare di chiederti perché i token non possono muoversi.",
 	"MonksLittleDetails.sort-statuses.name": "Ordina Condizioni",
 	"MonksLittleDetails.sort-statuses.hint": "Ordina le Condizioni del Token nel Token HUD",
 	"MonksLittleDetails.find-my-token.name": "Trova il mio Token",
@@ -35,8 +31,6 @@
 	"MonksLittleDetails.reposition-collapse.hint": "Riposiziona il Tasto Comprimi della barra laterale in modo che rimanga sempre nella stessa posizione generale",
 	"MonksLittleDetails.module-management-changes.name": "Modifiche alla gestione dei moduli",
 	"MonksLittleDetails.module-management-changes.hint": "Aggiungi colorazione per indicare la disponibilità delle dipendenze del modulo e fai clic sulle dipendenze per scorrerle",
-	"MonksLittleDetails.macro-tabs.name": "Schede delle Macro",
-	"MonksLittleDetails.macro-tabs.hint": "Consenti alle schede nell'editor macro di aggiungere una scheda anziché passare al campo successivo",
 	"MonksLittleDetails.pan-to-combatant.name": "Panoramica sul combattente",
 	"MonksLittleDetails.pan-to-combatant.hint": "Panoramica sul combattente attuale per il GM",
 	"MonksLittleDetails.large-print.name": "Grandi Dimensioni",
@@ -109,7 +103,7 @@
 
 	"MonksLittleDetails.pausemove.noone": "Nessuno",
 	"MonksLittleDetails.pausemove.everyone": "Tutti",
-  	"MonksLittleDetails.pausemove.players": "Giocatori",
+		"MonksLittleDetails.pausemove.players": "Giocatori",
 
 	"MonksLittleDetails.sortstatus.none": "Nessuno",
 	"MonksLittleDetails.sortstatus.rows": "Righe",

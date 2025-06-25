@@ -1,7 +1,6 @@
 ﻿import { registerSettings } from "./settings.js";
 import { MMCQ } from "./quantize.js";
 import { UpdateImages } from "./apps/update-images.js";
-import { ModuleWarning } from "./apps/module-warning.js";
 import { HUDChanges } from "./js/hud-changes.js";
 import { MonksCompendium} from "./apps/compendium.js";
 
@@ -96,16 +95,12 @@ export class MonksLittleDetails {
         if (MonksLittleDetails.canDo("change-invisible-image") && setting("change-invisible-image"))
             CONFIG.controlIcons.visibility = "modules/monks-little-details/icons/invisible.svg";
 
-        if (MonksLittleDetails.canDo("add-extra-statuses") && setting("add-extra-statuses")) {
-            CONFIG.statusEffects = CONFIG.statusEffects.concat(setting("additional-effects") || []);
-        }
-
         /*if (setting('context-view-artwork')) {
             let oldContextMenuOptions = Compendium.prototype._getContextMenuOptions;
             Compendium.prototype._contextMenu = function (html) {
 
                 let compendium = this;
-                new ContextMenu(html, ".directory-item", [
+                new foundry.applications.ux.ContextMenu(html, ".directory-item", [
                     {
                         name: "View Scene Artwork",
                         icon: '<i class="fas fa-image fa-fw"></i>',
@@ -175,9 +170,58 @@ export class MonksLittleDetails {
             return wrapped(...args);
         }
 
-        patchFunc("TokenLayer.prototype.releaseAll", releaseAll);
+        patchFunc("foundry.canvas.layers.TokenLayer.prototype.releaseAll", releaseAll);
 
-        patchFunc("FilePicker.prototype._onSubmit", async (wrapped, ...args) => {
+        patchFunc("foundry.canvas.groups.EffectsCanvasGroup.prototype.animateDarkness", function (wrapped, ...args) {
+            let result = wrapped(...args);
+            if (result !== false && game.user.isGM && setting("lighting-progress")) {
+                let [target, { duration }] = args;
+
+                if (duration > 0) {
+                    let label = `Transitioning to ${target == 0 ? 'day' : 'night'}`;
+
+                    if (MonksLittleDetails.darknessTimer) {
+                        clearInterval(MonksLittleDetails.darknessTimer);
+                        MonksLittleDetails.darknessTimer = undefined;
+                    }
+                    let bar = MonksLittleDetails.darknessBar;
+                    if (!bar || !ui.notifications.has(bar)) {
+                        bar = MonksLittleDetails.darknessBar = ui.notifications.info(label, { progress: true });
+                    }
+
+                    bar.update({ message: label, pct: 0 });
+                    MonksLittleDetails.darknessTimer = setInterval(() => {
+                        if (ui.notifications.has(bar)) {
+                            let pct = 1.0 - Math.abs(target - canvas.environment.darknessLevel);
+                            if (pct < 1.0) {
+                                bar.update({ pct });
+                                return;
+                            }
+                        }
+
+                        clearInterval(MonksLittleDetails.darknessTimer);
+                        MonksLittleDetails.darknessTimer = undefined;
+                        MonksLittleDetails.darknessBar.remove();
+                        MonksLittleDetails.darknessBar = undefined;
+                    }, 50);
+                }
+            }
+            return result;
+        });
+
+        patchFunc("foundry.canvas.placeables.Token.prototype._getDragConstrainOptions", function (wrapped, ...args) {
+            let result = wrapped(...args);
+            let moveKey = MonksLittleDetails.getMoveKey();
+
+            if (game.user.isGM && moveKey && game.keyboard.downKeys.has(moveKey)) {
+                result.ignoreWalls = true; //ignore walls when moving tokens with the m key
+                result.ignoreCost = true; //ignore costs when moving tokens with the m key
+            }
+
+            return result;
+        });
+
+        patchFunc("foundry.applications.apps.FilePicker.prototype._onSubmit", async (wrapped, ...args) => {
             let [ev] = args;
             let path = ev.target.file.value;
 
@@ -191,76 +235,61 @@ export class MonksLittleDetails {
             return wrapped(...args);
         });
 
-        patchFunc("DocumentSheet.prototype._createDocumentIdLink", function (wrapped, ...args) {
-            wrapped(...args);
-            let [html] = args;
+        foundry.applications.api.DocumentSheetV2.prototype.constructor.DEFAULT_OPTIONS.actions.copyImagePath = MonksLittleDetails.onCopyImagePath;
 
-            if (!(this.object instanceof foundry.abstract.Document) || !this.object.id || !(this.object.src || this.object.img)) return;
-            const title = html.find(".window-title");
-            const label = game.i18n.localize(this.object.constructor.metadata.label);
-            const srcLink = document.createElement("a");
-            srcLink.classList.add("document-image-link");
-            srcLink.setAttribute("alt", "Copy image file path");
-            srcLink.dataset.tooltip = "Copy image file path";
-            srcLink.dataset.tooltipDirection = "UP";
-            srcLink.innerHTML = '<i class="fa-solid fa-file-image"></i>';
-            srcLink.addEventListener("click", event => {
-                let src = (this.object.src || this.object.img);
-                event.preventDefault();
-                game.clipboard.copyPlainText(src);
-                ui.notifications.info(`${label} image ${src} copied to clipboard`);
-            });
-            title.append(srcLink);
+        patchFunc("foundry.applications.api.DocumentSheetV2.prototype._renderFrame", function (wrapped, ...args) {
+            const frame = wrapped(...args);
+            if (this.document instanceof foundry.abstract.Document && this.document.id && (this.document.src || this.document.img || this.document.background?.src || this.document.texture?.src)) {
+                const copyLabel = "Copy image file path";
+                const copyId = `<button type="button" class="header-control fa-solid fa-file-image icon" data-action="copyImagePath"  data-tooltip="${copyLabel}" aria-label="${copyLabel}"></button>`;
+                this.window.close.insertAdjacentHTML("beforebegin", copyId);
+            }
+
+            return frame;
         });
 
-        patchFunc("ControlsLayer.prototype.drawCursor", function (wrapped, ...args) {
+        /*
+        patchFunc("foundry.canvas.layers.ControlsLayer.prototype.drawCursor", function (wrapped, ...args) {
             let result = wrapped(...args);
             let [user] = args;
             if (!user.hasPermission("SHOW_CURSOR")) {
-                let cursor = this._cursors[user.id];
+                let cursor = this.cursors[user.id];
                 if (cursor) cursor.visible = false;
             }
         });
-
-        if (game.settings.get("monks-little-details", "show-notify")) {
-            patchFunc("ChatLog.prototype.notify", function (...args) {
-                let message = args[0]
-                this._lastMessageTime = new Date();
-                if (!this.rendered) return;
-
-                // Display the chat notification icon and remove it 3 seconds later if the chat tab is active
-                let icon = $('#chat-notification');
-                if (icon.is(":hidden")) icon.fadeIn(100);
-                if (ui.sidebar.activeTab == 'chat') {
-                    setTimeout(() => {
-                        if (new Date() - this._lastMessageTime > 3000 && icon.is(":visible")) icon.fadeOut(100);
-                    }, 3001);
-                }
-
-                // Play a notification sound effect
-                if (message.sound) foundry.audio.AudioHelper.play({ src: message.sound });
-            }, "OVERRIDE");
-        }
-        /*
-        patchFunc("TilesLayer.prototype._onDropData", async function (...args) {
-            const [event, data] = args;
-            if (!data.texture?.src) return;
-            if (!this.active) this.activate();
-
-            // Get the data for the tile to create
-            const createData = await this._getDropData(event, data);
-
-            // Validate that the drop position is in-bounds and snap to grid
-            if (!canvas.dimensions.rect.contains(createData.x, createData.y))
-                return false;
-
-            // Create the Tile Document
-            const cls = getDocumentClass(this.constructor.documentName);
-            return cls.create(createData, { parent: canvas.scene });
-        }, "OVERRIDE");
         */
 
-        patchFunc("ActorDirectory.prototype.renderPopout", function (wrapped, ...args) {
+        if (game.settings.get("monks-little-details", "show-notify")) {
+            patchFunc("foundry.applications.sidebar.tabs.ChatLog.prototype.notify", function (wrapped, ...args) {
+                if (!this.rendered) return;
+
+                let [message, { newMessage }] = args;
+
+                // Post a chat card notification if the setting is enabled and this is a new message.
+                if (!newMessage || !this._shouldShowNotifications()) {
+                    // Only show the pip if we are not on the chat tab
+                    if (ui.sidebar.tabGroups.primary != "chat") {
+                        if (setting("highlight-notify"))
+                            document.querySelector('#sidebar .tabs [data-tab="chat"]')?.classList.add("highlight");
+                        else
+                            document.querySelector('#sidebar .tabs [data-tab="chat"] + .notification-pip')?.classList.add("active");
+                    }
+
+                    if (message.sound) game.audio.play(message.sound, { context: game.audio.interface });
+                } else {
+                    wrapped(...args);
+                    // Still show the pip if we aren't on the chat tab, so that the user knows they have new messages
+                    if (ui.sidebar.tabGroups.primary != "chat") {
+                        if (setting("highlight-notify"))
+                            document.querySelector('#sidebar .tabs [data-tab="chat"]')?.classList.add("highlight");
+                        else
+                            document.querySelector('#sidebar .tabs [data-tab="chat"] + .notification-pip')?.classList.add("active");
+                    }
+                }
+            }, "MIXED");
+        }
+
+        patchFunc("foundry.applications.sidebar.tabs.ActorDirectory.prototype.renderPopout", function (wrapped, ...args) {
             if (setting("open-actor")) {
                 if (game.user.isGM) {
                     if (MonksLittleDetails._lastActor)
@@ -277,7 +306,7 @@ export class MonksLittleDetails {
                 return wrapped(...args);
         }, "MIXED");
 
-        patchFunc("Application.prototype.setPosition", function (wrapped, ...args) {
+        patchFunc("foundry.applications.api.ApplicationV2.prototype.setPosition", function (wrapped, ...args) {
             let [options] = args;
             let { left } = (options || {});
             let noPosition = !this.position || !this.position.left;
@@ -286,26 +315,27 @@ export class MonksLittleDetails {
             [options] = args;
             left = (options || {}).left;
             let scale = (options || {}).scale;
-            if (noLeft && noPosition && this.popOut && setting("dual-monitor") != "none") {
-                const el = this.element[0];
-                const currentPosition = this.position;
+            if (noLeft && noPosition && this.hasFrame && setting("dual-monitor") != "none") {
+                const el = this.element;
+                let current_scale = this.position.scale;
+                let current_left = this.position.left;
                 if (scale === null) scale = 1;
-                scale = scale ?? currentPosition.scale ?? 1;
+                scale = scale ?? current_scale ?? 1;
 
                 const scaledWidth = this.position.width * scale;
                 const tarL = ((window.innerWidth / 2) - scaledWidth) / 2 + (setting("dual-monitor") == "right" ? (window.innerWidth / 2) : 0);
                 const maxL = Math.max(window.innerWidth - scaledWidth, 0);
-                currentPosition.left = left = Math.clamp(tarL, 0, maxL);
-                el.style.left = `${currentPosition.left}px`;
+                current_left = left = Math.clamp(tarL, 0, maxL);
+                el.style.left = `${current_left}px`;
 
-                return currentPosition;
+                result.left = current_left;
             }
 
             return result;
         });
 
         /*
-        patchFunc("ControlsLayer.prototype.handlePing", function (wrapped, ...args) {
+        patchFunc("foundry.canvas.layers.ControlsLayer.prototype.handlePing", function (wrapped, ...args) {
             let [user, position, options] = args;
             if (setting("dual-monitor") != "none") {
                 var offset = (window.innerWidth / 2) * (setting("dual-monitor") == "right" ? 1 : -1);
@@ -316,6 +346,17 @@ export class MonksLittleDetails {
         });
         */
     }
+
+    static onCopyImagePath = function (event) {
+        let src = (this.document.src || this.document.img || this.document.background?.src || this.document.texture?.src);
+        event.preventDefault();
+        event.stopPropagation(); // Don't trigger other events
+        if (event.detail > 1) return; // Ignore repeated clicks
+        const label = game.i18n.localize(this.document.constructor.metadata.label);
+
+        game.clipboard.copyPlainText(src);
+        ui.notifications.info(`${label} image ${src} copied to clipboard`);
+    };
 
     static addQuickLink(target, favorite = false) {
         let quicklinks = (game.user.getFlag("monks-little-details", "quicklinks") || []);
@@ -411,6 +452,10 @@ export class MonksLittleDetails {
     }
 
     static async ready() {
+        if (MonksLittleDetails.canDo("add-extra-statuses") && setting("add-extra-statuses")) {
+            CONFIG.statusEffects = CONFIG.statusEffects.concat(setting("additional-effects") || []);
+        }
+
         MonksLittleDetails.injectCSS();
 
         if (setting("pause-border") && game.paused && $('#board').length) {
@@ -431,21 +476,30 @@ export class MonksLittleDetails {
         }
 
         $('body').toggleClass("change-windows", setting("window-css-changes"));
+        $('body').toggleClass("change-chat", setting("chat-css-changes"));
 
         game.settings.settings.get("monks-little-details.find-my-token").default = !game.user.isGM;
-
-        if (setting("show-warning") && game.user.isGM) {
-            new ModuleWarning().render(true);
-        }
 
         HUDChanges.ready();
         game.socket.on(MonksLittleDetails.SOCKET, MonksLittleDetails.onMessage);
 
         //remove notify
-        $('#sidebar-tabs a[data-tab="chat"]').on('click.monks-little-details', function (event) {
-            let icon = $('#chat-notification');
-            if (icon.is(":visible")) icon.fadeOut(100);
+        $('#sidebar .tabs button[role="tab"]').on('click.monks-little-details', function (event) {
+            let pip = $(event.currentTarget).siblings(".notification-pip");
+            pip.removeClass("active");
+            $(event.currentTarget).removeClass("highlight"); 
         });
+
+        if (game.MonksCombatDetails && game.settings.get("monks-little-details", "show-notify")) {
+            game.MonksCombatDetails.combatNotify = () => {
+                if (ui.sidebar.tabGroups.primary != "combat") {
+                    if (setting("highlight-notify"))
+                        $('#sidebar .tabs [data-tab="combat"]').addClass("highlight");
+                    else
+                        $('#sidebar .tabs [data-tab="combat"] + .notification-pip').addClass("active");
+                }
+            }
+        }
     }
 
     static registerHotKeys() {
@@ -458,7 +512,7 @@ export class MonksLittleDetails {
 
         game.keybindings.register('monks-little-details', 'release-targets', {
             name: 'MonksLittleDetails.release-targets.name',
-            editable: [{ key: "KeyT", modifiers: [KeyboardManager.MODIFIER_KEYS?.ALT]}],
+            editable: [{ key: "KeyT", modifiers: [foundry.helpers.interaction.KeyboardManager.MODIFIER_KEYS?.ALT]}],
             restricted: false,
             onDown: () => {
                 for (let t of game.user.targets) {
@@ -469,8 +523,8 @@ export class MonksLittleDetails {
 
         if (game.settings.get("monks-little-details", "key-swap-tool")) {
             let layers = [
-                { name: "Token Layer", tool: 'token', def: "KeyG", restricted: false },
-                { name: "Measure Layer", tool: 'measure', restricted: false },
+                { name: "Token Layer", tool: 'tokens', def: "KeyG", restricted: false },
+                { name: "Measure Layer", tool: 'templates', restricted: false },
                 { name: "Tile Layer", tool: 'tiles', def: "KeyH", restricted: true },
                 { name: "Drawing Layer", tool: 'drawings', restricted: false },
                 { name: "Wall Layer", tool: 'walls', restricted: true },
@@ -492,7 +546,7 @@ export class MonksLittleDetails {
                 });
                 game.keybindings.register('monks-little-details', `change-${l.tool}-control`, {
                     name: `Change to ${l.name}`,
-                    editable: (l.def ? [{ key: l.def, modifiers: [KeyboardManager.MODIFIER_KEYS?.SHIFT] }] : []),
+                    editable: (l.def ? [{ key: l.def, modifiers: [foundry.helpers.interaction.KeyboardManager.MODIFIER_KEYS?.SHIFT] }] : []),
                     restricted: l.restricted,
                     onDown: () => { MonksLittleDetails.swapTool(l.tool, false); },
                 });
@@ -505,11 +559,9 @@ export class MonksLittleDetails {
         if (control.name != controlName && MonksLittleDetails.switchTool == undefined) {
             if (quick !== false) //e?.shiftKey
                 MonksLittleDetails.switchTool = { control: control, tool: control.activeTool };
-            let newcontrol = ui.controls.controls.find(c => { return c.name == controlName; });
+            let newcontrol = ui.controls.controls[controlName];
             if (newcontrol != undefined) {
-                //ui.controls.activeControl = newcontrol.name;
-                if (newcontrol && newcontrol.layer)
-                    canvas[newcontrol.layer].activate();
+                (canvas[newcontrol.layer] || canvas[controlName]).activate();
             }
         }
     }
@@ -517,9 +569,7 @@ export class MonksLittleDetails {
     static releaseTool() {
         if (MonksLittleDetails.switchTool != undefined) {
             if (MonksLittleDetails.switchTool.control) {
-                if (MonksLittleDetails.switchTool.control.layer)
-                    canvas[MonksLittleDetails.switchTool.control.layer].activate();
-                //ui.controls.activeControl = MonksLittleDetails.switchTool.control.name;
+                (canvas[MonksLittleDetails.switchTool.control.layer] || canvas[MonksLittleDetails.switchTool.control.name]).activate();
             }
             delete MonksLittleDetails.switchTool;
         }
@@ -536,7 +586,12 @@ export class MonksLittleDetails {
     object-position: center !important;
 }
 
-.filepicker .thumbs-list img {
+.directory:not(.compendium-sidebar) .directory-list .directory-item > i.fa-user {
+    font-size: 40px;
+    width: 40px;
+}
+
+#file-picker ul.thumbs img {
     object-fit: contain !important;
     object-position: center !important;
 }
@@ -558,37 +613,6 @@ export class MonksLittleDetails {
     text-align: left;
 }
 
-/*
-.form-group select{
-    width: calc(100% - 2px);
-}
-*/
-
-.compendium.directory .directory-list .directory-item.scene {
-    position: relative;
-    height: calc(var(--sidebar-item-height) + 2px);
-}
-
-.compendium.directory .directory-list .directory-item.scene img {
-    flex: 1;
-    object-fit: cover !important;
-}
-
-.compendium.directory .directory-list .directory-item.scene h4 {
-    position: absolute;
-    width: 100%;
-    text-align: center;
-    text-shadow: 1px 1px 3px #000;
-    color: #f0f0e0;
-    margin: 0px;
-}
-
-.compendium.directory .directory-list .directory-item.scene h4 a{
-background-color: rgba(0, 0, 0, 0.5);
-    padding: 5px 10px;
-    border-radius: 4px;
-}
-
 #controls ol.control-tools .has-notes::after {
     color: #bc8c4a;
 }
@@ -605,20 +629,6 @@ background-color: rgba(0, 0, 0, 0.5);
 
         }
 
-        if (setting("move-pause") == "all" || (setting("move-pause") == "true" && !game.user.isGM)) {
-            innerHTML += `
-#pause {
-    bottom:30%;
-}
-#pause img {
-    top: -100px;
-    left: calc(50% - var(--pause-padding));
-    height: 300px;
-    width: 300px;
-    opacity: 0.3;
-}
-`;
-        }
 
         var r = document.querySelector(':root');
         r.style.setProperty('--sidebar-padding', `${setting("directory-padding")}px`);
@@ -715,7 +725,7 @@ background-color: rgba(0, 0, 0, 0.5);
     static getPalette(src, element, ctrl, fn) {
         // Create custom CanvasImage object
         if (src != undefined) {
-            loadTexture(src).then((texture) => {
+            foundry.canvas.loadTexture(src).then((texture) => {
                 if (texture != undefined) {
                     // Create a temporary Sprite using the Tile texture
                     const sprite = new PIXI.Sprite(texture);
@@ -795,19 +805,9 @@ Hooks.on("canvasReady", () => {
     canvas.stage.on("mousedown", MonksLittleDetails.moveTokens);    //move all tokens while holding down m
 });
 
-Hooks.on('renderTokenHUD', async (app, html, options) => {
-    MonksLittleDetails.element = html;
-    //MonksLittleDetails.tokenHUD = app;
-
-    //swap the setting and target button
-    if (game.settings.get("monks-little-details", "swap-buttons")) {
-        $('.col.left .control-icon[data-action="target"]', html).insertBefore($('.col.left .control-icon[data-action="config"]', html));
-    }
-});
-
 Hooks.on('renderSceneConfig', async (app, html, options) => {
     if (game.settings.get("monks-little-details", 'scene-palette')) {
-        MonksLittleDetails.currentScene = app.object;
+        MonksLittleDetails.currentScene = app.document;
 
         let backgroundColor = $('color-picker[name="backgroundColor"]', html);
         backgroundColor.css({ position: 'relative' });
@@ -826,23 +826,6 @@ Hooks.on('renderSceneConfig', async (app, html, options) => {
         $(html).on("click", () => { $('.background-palette-container', html).remove(); });
     }
 
-    /*
-    $('<div>')
-        .addClass('form-group')
-        .append($('<label>').html('Thumbnail Image'))
-        .append(
-            $('<div>').addClass('form-fields')
-                .append($('<button>')
-                    .addClass('file-picker')
-                    .attr({ type: 'button', 'data-type': 'imagevideo', 'data-target': 'flags.monks-little-details.thumbnail', title: 'Browse Files', tabindex: '-1' })
-                    .html('<i class="fas fa-file-import fa-fw"></i>')
-                    .click(app._activateFilePicker.bind(app))
-                )
-                .append($('<input>').addClass('image').attr({ type: 'text', name: 'flags.monks-little-details.thumbnail', placeholder: 'File Path' }).val(app.object.getFlag('monks-little-details', 'thumbnail')))
-        )
-        .append($('<p>').addClass('notes').html(`Configure the thumbnail image that's shown in the scenes directory`))
-        .insertAfter($('input[name="foreground"]', html).closest('.form-group'));
-        */
     app.setPosition({ height: 'auto' });
 });
 
@@ -850,13 +833,13 @@ Hooks.on('renderUserConfig', async (app, html, options) => {
     if (game.settings.get("monks-little-details", 'scene-palette') && app.document.avatar) {
         MonksLittleDetails.currentUser = app.document;
 
-        let playerColor = $(`color-picker[id="UserConfig-${app.document.uuid}-form-color"]`, app.element);
+        let playerColor = $(`color-picker[name="color"]`, app.element);
         playerColor.css({ position: 'relative' });
         $('<button>').attr('type', 'button').html('<i class="fas fa-palette"></i>').on('click', function (e) {
             let element = $(this).siblings('.background-palette-container');
             if (element.length == 0) {
                 element = $('<div>').addClass('background-palette-container flexrow').insertAfter(this);
-                let avatar = $(`file-picker[id="UserConfig-${app.document.uuid}-form-avatar"] input`, app.element).val();
+                let avatar = $(`file-picker[name="avatar"] input`, app.element).val();
                 MonksLittleDetails.getPalette(avatar, element, playerColor, MonksLittleDetails.updatePlayerColour);
             } else {
                 element.remove();
@@ -872,53 +855,64 @@ Hooks.on('renderUserConfig', async (app, html, options) => {
 });
 
 Hooks.on("renderSettingsConfig", (app, html, data) => {
-    $('<p>').addClass('mld-warning').append('<i class="fas fa-circle-question"></i> Where have all of my features gone? ').append($('<a>').html("Click here").on("click", () => { new ModuleWarning().render(true); })).insertBefore($('[name="monks-little-details.swap-buttons"]').parents('div.form-group:first'));
-    $('<div>').addClass('form-group group-header').html(i18n("MonksLittleDetails.SystemChanges")).insertBefore($('[name="monks-little-details.swap-buttons"]').parents('div.form-group:first'));
+    $('<p>').addClass('mld-warning').append('<i class="fas fa-circle-question"></i> Where have all of my features gone? ').append($('<a>').html("Click here").on("click", () => { new ModuleWarning().render(true); })).insertBefore($('[name="monks-little-details.alter-hud"]').parents('div.form-group:first'));
+    $('<div>').addClass('form-group group-header').html(i18n("MonksLittleDetails.SystemChanges")).insertBefore($('[name="monks-little-details.alter-hud"]').parents('div.form-group:first'));
     $('<div>').addClass('form-group group-header').html(i18n("MonksLittleDetails.AddedFeatures")).insertBefore($('[name="monks-little-details.scene-palette"]').parents('div.form-group:first'));
 
-    $(`<input type="color" style="flex: 0 0 90px;" value="${$('[name="monks-little-details.pause-border-colour"]').val()}" data-edit="monks-little-details.pause-border-colour">`).insertAfter($('[name="monks-little-details.pause-border-colour"]'));
-    $('[name="monks-little-details.pause-border-colour"]').css("flex", "0 0 90px").on("change", function () {
-        let val = $(this).val();
-        if (val && !val.startsWith("#")) {
-            val = "#" + val;
-            $(this).val(val);
-        }
-        $(this).next().val($(this).val());
-    });
-    });
+    let pauseBorder = $('input[name="monks-little-details.pause-border-colour"]').val();
+    pauseBorder = pauseBorder.slice(0, 7);
+    if (pauseBorder && !pauseBorder.startsWith("#")) {
+        pauseBorder = "#" + pauseBorder;
+    }
+    let pauseColour = $(`<color-picker style="flex: 0 0 140px;" value="${pauseBorder}" name="monks-little-details.pause-border-colour">`);
+    $('input[name="monks-little-details.pause-border-colour"]').replaceWith(pauseColour);
+});
 
 Hooks.on("renderCompendium", (compendium, html, data) => {
     if (setting('compendium-view-artwork')) {
         if (compendium.collection.documentName == 'Scene') {
-            html.find('li.directory-item h4 a').click(ev => {
-                ev.preventDefault();
-                ev.cancelBubble = true;
-                if (ev.stopPropagation)
-                    ev.stopPropagation();
+            $(html).find('li.directory-item a').each((idx, elem) => {
+                $(elem).wrap($('<div class="directory-item-container"></div>').click(async (ev) => {
+                    ev.preventDefault();
+                    const { entryId } = ev.currentTarget.closest("[data-entry-id]").dataset;
+                    const document = compendium.collection.get(entryId) ?? await compendium.collection.getDocument(entryId);
+                    document.sheet.render(true);
+                })).after($('<i class="fa-solid fa-image"></i>').click(ev => {
+                    ev.preventDefault();
+                    ev.cancelBubble = true;
+                    if (ev.stopPropagation)
+                        ev.stopPropagation();
 
-                let documentId = ev.currentTarget.closest('li').dataset.documentId;
-                compendium.collection.getDocument(documentId).then(entry => {
-                    let img = entry.background.src;
-                    if (img) {
-                        if (VideoHelper.hasVideoExtension(img))
-                            ImageHelper.createThumbnail(img, { width: entry.width, height: entry.height }).then(img => {
-                                new ImagePopout(img.thumb, {
-                                    title: entry.name,
+                    const { entryId } = ev.currentTarget.closest('[data-entry-id]').dataset;
+                    compendium.collection.getDocument(entryId).then(entry => {
+                        let img = entry.background.src;
+                        if (img) {
+                            if (foundry.helpers.media.VideoHelper.hasVideoExtension(img))
+                                foundry.helpers.media.ImageHelper.createThumbnail(img, { width: entry.width, height: entry.height }).then(img => {
+                                    new foundry.applications.apps.ImagePopout({
+                                        window: {
+                                            title: entry.name
+                                        },
+                                        src: img.thumb,
+                                        shareable: true,
+                                        uuid: entry.uuid
+                                    }).render(true);
+                                });
+                            else {
+                                new foundry.applications.apps.ImagePopout({
+                                    window: {
+                                        title: entry.name,
+                                    },
+                                    src: img,
                                     shareable: true,
                                     uuid: entry.uuid
                                 }).render(true);
-                            });
-                        else {
-                            new ImagePopout(img, {
-                                title: entry.name,
-                                shareable: true,
-                                uuid: entry.uuid
-                            }).render(true);
+                            }
+                        } else {
+                            ev.currentTarget.parentElement.click();
                         }
-                    } else {
-                        ev.currentTarget.parentElement.click();
-                    }
-                });
+                    });
+                }));
             });
         }
     }
@@ -989,8 +983,8 @@ Hooks.on("preUpdateToken", (document, update, options, userId) => {
 
 Hooks.on("getSceneControlButtons", (controls) => {
     if (setting("find-my-token")) {
-        let tokenControls = controls.find(control => control.name === "token")
-        tokenControls.tools.push({
+        let tokenControls = controls["tokens"];
+        tokenControls.tools["findtoken"] = {
             name: "findtoken",
             title: "MonksLittleDetails.FindMyToken",
             icon: "fas fa-users-viewfinder",
@@ -1008,7 +1002,7 @@ Hooks.on("getSceneControlButtons", (controls) => {
                 let token = tokens[lastIdx];
                 if (!token) return;
 
-                canvas.pan({ x: token.x, y: token.y });
+                canvas.animatePan({ x: token.x, y: token.y });
                 token.control({ releaseOthers: true });
 
                 lastIdx = (lastIdx + 1) % tokens.length;
@@ -1016,7 +1010,7 @@ Hooks.on("getSceneControlButtons", (controls) => {
                 await game.user.setFlag('monks-little-details', 'findIdx', lastIdx);
             },
             button: true
-        });
+        };
     }
 });
 
@@ -1031,55 +1025,43 @@ Hooks.on('renderAmbientSoundConfig', (app, html, data) => {
         .insertBefore($('button[name="submit"]', html));
 })*/
 
-Hooks.on("renderActorSheet", (sheet) => {
-    MonksLittleDetails._lastActor = sheet.object;
-    game.user.setFlag("monks-little-details", "last-actor", sheet.object.uuid);
+Hooks.on("renderActorSheetV2", (sheet) => {
+    MonksLittleDetails._lastActor = sheet.document;
+    game.user.setFlag("monks-little-details", "last-actor", sheet.document.uuid);
 })
 
-Hooks.on("getSidebarTabFolderContext", (html, entries) => {
+Hooks.on("getFolderContextOptions", (app, entries) => {
     entries.splice(4, 0, {
         name: "FOLDER.Clear",
         icon: '<i class="fas fa-folder"></i>',
         condition: game.user.isGM,
         callback: header => {
-            const li = header.parent();
-            const folder = game.folders.get(li.data("folderId"));
+            const li = header.parentElement;
+            const folder = game.folders.get(li.dataset.folderId);
             if (folder) {
-                return Dialog.confirm({
-                    title: `${i18n("FOLDER.Clear")} ${folder.name}`,
-                    content: `<h4>${game.i18n.localize("AreYouSure")}</h4><p>${i18n("MonksLittleDetails.ClearWarning")}</p>`,
-                    yes: () => {
-                        //const userId = game.user.id;
-                        //const db = CONFIG.DatabaseBackend;
-                        /*
-                        // Delete or move sub-Folders
-                        const deleteFolderIds = [];
-                        for (let f of folder.getSubfolders()) {
-                            deleteFolderIds.push(f.id);
-                        }
-                        if (deleteFolderIds.length) {
-                            db._handleDeleteDocuments({
-                                request: { type: "Folder", options: { deleteSubfolders: true, deleteContents: true, render: true } },
-                                result: deleteFolderIds,
-                                userId
-                            });
-                        }*/
-
-                        // Delete contained Documents
-                        const deleteDocumentIds = [];
-                        for (let d of folder.documentCollection) {
-                            if (d.folder?.id !== folder.id) continue;
-                            deleteDocumentIds.push(d.id);
-                        }
-                        if (deleteDocumentIds.length) {
-                            const cls = getDocumentClass(folder.type);
-                            return cls.deleteDocuments(deleteDocumentIds);
-                        }
+                return foundry.applications.api.DialogV2.confirm({
+                    window: {
+                        title: `${i18n("FOLDER.Clear")} ${folder.name}`,
                     },
-                    options: {
-                        top: Math.min(li[0].offsetTop, window.innerHeight - 350),
+                    position: {
+                        top: Math.min(li.offsetTop, window.innerHeight - 350),
                         left: window.innerWidth - 720,
                         width: 400
+                    },
+                    content: `<h4>${game.i18n.localize("AreYouSure")}</h4><p>${i18n("MonksLittleDetails.ClearWarning")}</p>`,
+                    yes: {
+                        callback: () => {
+                            // Delete contained Documents
+                            const deleteDocumentIds = [];
+                            for (let d of folder.documentCollection) {
+                                if (d.folder?.id !== folder.id) continue;
+                                deleteDocumentIds.push(d.id);
+                            }
+                            if (deleteDocumentIds.length) {
+                                const cls = getDocumentClass(folder.type);
+                                return cls.deleteDocuments(deleteDocumentIds);
+                            }
+                        }
                     }
                 });
             }
@@ -1088,29 +1070,23 @@ Hooks.on("getSidebarTabFolderContext", (html, entries) => {
 });
 
 Hooks.on("renderMacroConfig", (app, html, data) => {
-    $('.sheet-footer', html).prepend(
+    $('.form-footer', html).prepend(
         $("<button>")
             .attr("type", "button")
             .html('<i class="fas fa-file-download"></i> Apply')
-            .on("click", (event) => { app._onSubmit.call(app, event, { preventClose: true }) }));
-
-    if (setting("macro-tabs")) {
-        $('textarea[name="command"]', html).on("keydown", function (e) {
-            if (e.key == 'Tab') {
-                e.preventDefault();
-                e.stopPropagation();
-                var start = this.selectionStart;
-                var end = this.selectionEnd;
-
-                // set textarea value to: text before caret + tab + text after caret
-                this.value = this.value.substring(0, start) + "\t" + this.value.substring(end);
-
-                // put caret at right position again
-                this.selectionStart = this.selectionEnd = start + 1;
-                $(this).trigger("input");
-            }
-        });
-    }
+            .on("click", (event) => {
+                event.currentTarget = event.currentTarget.closest('form');
+                app._onSubmitForm.call(app, {
+                    closeOnSubmit: false,
+                    handler: async function (event, form, formData, options = {}) {
+                        if (!this.isEditable) return;
+                        const { updateData, ...updateOptions } = options;
+                        const submitData = this._prepareSubmitData(event, form, formData, updateData);
+                        await this._processSubmitData(event, form, submitData, updateOptions);
+                        ui.notifications.info("Macro saved");
+                    }
+                }, event);
+            }));
 })
 
 Hooks.on('renderModuleManagement', (app, html, data) => {
@@ -1128,14 +1104,14 @@ Hooks.on('renderModuleManagement', (app, html, data) => {
         for (let mod of data.modules) {
             if (mod.relationships.requires.length) {
                 for (let dep of mod.relationships.requires) {
-                    if (requires[dep] == undefined)
-                        requires[dep] = [mod.name];
+                    if (requires[dep.id] == undefined)
+                        requires[dep.id] = [mod.id];
                     else
-                        requires[dep].push(mod.name);
+                        requires[dep.id].push(mod.id);
 
-                    let hasModule = data.modules.find(m => (m.id || m.name) == dep);
+                    let hasModule = data.modules.find(m => m.id == dep.id);
                     $(`.package[data-module-id="${mod.id || mod.name}"] .package-metadata .tag`, html).each(function () {
-                        if ($(this).html() == dep) {
+                        if ($(this).html() == dep.id) {
                             $(this).addClass(hasModule ? (hasModule.active ? "success" : "info") : "danger");
                         }
                         $(this).on("click", scrollToView.bind(this));
@@ -1148,118 +1124,40 @@ Hooks.on('renderModuleManagement', (app, html, data) => {
             let li = $('<li>').appendTo($(`.package[data-module-id="${req}"] .package-metadata`, html));
             li.append($("<strong>").html("Supports:"));
             for (let val of values) {
-                li.append($("<span>").addClass("tag").html(val).on("click", scrollToView.bind(this)));
+                li.append($("<span>").addClass("tag warning").html(val).on("click", scrollToView.bind(this)));
             }
         }
     }
 });
 
-Hooks.on("getActorDirectoryEntryContext", (html, entries) => {
+Hooks.on("getActorContextOptions", (app, entries) => {
     if (game.system.id == "dnd5e") {
         entries.push({
             name: "Transform into this Actor",
             icon: '<i class="fas fa-random"></i>',
             condition: li => {
-                const actor = game.actors.get(li.data("documentId"));
-                const canPolymorph = game.user.isGM || (actor.testUserPermission(game.user, "OWNER") && game.user.can("TOKEN_CREATE") && game.settings.get("dnd5e", "allowPolymorphing"));
+                if (canvas.tokens.controlled.length == 0 && (game.user.isGM || !game.user.character)) return false;
+                const actor = game.actors.get(li.dataset.entryId);
+                const canPolymorph = game.user.isGM || (actor.isOwner && game.user.can("TOKEN_CREATE") && game.settings.get("dnd5e", "allowPolymorphing"));
                 return canPolymorph;
             },
             callback: async (li) => {
-                let docId = li.data("documentId");
-                let from = game.actors.get(docId);
+                let from;
+                if (app.collection instanceof foundry.documents.collections.CompendiumCollection)
+                    from = await app.collection.getDocument(li.dataset.entryId);
+                else
+                    from = app.collection.get(li.dataset.entryId);
 
                 if (!from) return;
 
-                let data = {
-                    type: 'Actor',
-                    uuid: from.uuid
-                }
-
                 let actors = canvas.tokens.controlled.map(t => t.actor);
 
                 if (actors.length == 0 && !game.user.isGM)
                     actors = [game.user.character];
 
                 for (let actor of actors) {
-                    actor.sheet._onDropActor(null, data);
+                    actor.sheet._onDropActor({ preventDefault: () => { }, target: { closest: () => { return false } } }, from);
                 }
-            }
-        });
-    }
-});
-
-Hooks.on("getCompendiumEntryContext", (html, entries) => {
-    if (game.system.id == "dnd5e") {
-        entries.push({
-            name: "Transform into this Actor",
-            icon: '<i class="fas fa-random"></i>',
-            condition: li => {
-                if (!$(li).hasClass("actor"))
-                    return false;
-                const canPolymorph = game.user.isGM || (game.settings.get("dnd5e", "allowPolymorphing"));
-                return canPolymorph;
-            },
-            callback: async (li) => {
-                let compendium = $(li).closest('.directory');
-                let data = {
-                    pack: compendium.data("pack"),
-                    id: li.data("documentId")
-                }
-
-                let actors = canvas.tokens.controlled.map(t => t.actor);
-
-                if (actors.length == 0 && !game.user.isGM)
-                    actors = [game.user.character];
-
-                for (let actor of actors) {
-                    actor.sheet._onDropActor(null, data);
-                }
-            }
-        });
-    }
-});
-
-Hooks.on("updateScene", (scene, data, options) => {
-    if ((data.environment?.darknessLevel == 0 || data.environment?.darknessLevel == 1) && options.animateDarkness != undefined && ui.controls.activeControl == "lighting") {
-        let tool = $(`#controls .sub-controls .control-tool[data-tool="${data.environment?.darknessLevel == 0 ? 'day' : 'night'}"]`);
-        $('#darkness-progress').remove();
-
-        let leftSide = $("<div>").attr("deg", 0);
-        let rightSide = $("<div>").attr("deg", 0);
-
-        let progress = $('<div>')
-            .attr("id", "darkness-progress")
-            .append($("<div>").addClass("progress-left-side").append(leftSide))
-            .append($("<div>").addClass("progress-right-side").append(rightSide));
-
-        tool.append(progress).css({ "position": "relative", "overflow": "hidden" });
-
-        let halfTime = options.animateDarkness / 2;
-
-        $(rightSide).animate({ deg: 180 }, {
-            duration: halfTime,
-            step: function (now) {
-                if (!!rightSide.attr("stop"))
-                    rightSide.stop();
-                rightSide.css({
-                    transform: 'rotate(' + now + 'deg)'
-                });
-            },
-            complete: function () {
-                $(leftSide).animate({ deg: 180 }, {
-                    duration: halfTime,
-                    step: function (now) {
-                        if (!!leftSide.attr("stop"))
-                            leftSide.stop();
-                        leftSide.css({
-                            transform: 'rotate(' + now + 'deg)'
-                        });
-                    },
-                    complete: function () {
-                        progress.remove();
-                        tool.css({ "overflow": "" });
-                    }
-                });
             }
         });
     }
@@ -1286,6 +1184,7 @@ Hooks.on("renderFilePicker", (app, html, data) => {
             .before(
                 $("<button>")
                     .attr("type", "button")
+                    .attr("data-tooltip", "Add to quicklinks")
                     .addClass("quick-link-input-button")
                     .append($("<i>").addClass(`fa-star ${link?.favorite ? "fa-solid" : "fa-regular"}`))
                     .click(function (ev) {
@@ -1320,7 +1219,7 @@ Hooks.on("renderFilePicker", (app, html, data) => {
     }
 
     if (setting("remove-favorites")) {
-        $(".form-group.favorites", html).remove();
+        $(".set-favorite", html).closest(".form-group").remove();
     }
 });
 
@@ -1342,6 +1241,14 @@ Hooks.on("pauseGame", (state) => {
     }
 });
 
-Hooks.on("renderChatMessage", (app, html, data) => {
+Hooks.on("renderChatMessageHTML", (app, html, data) => {
     $(".message-timestamp", html).attr("title", new Date(data.message.timestamp).toLocaleString());
+});
+
+Hooks.on("renderMainMenu", (app, html, data, options) => {
+    $("#menu").click((ev) => {
+        if (ui.menu.rendered) {
+            ui.menu.toggle();
+        }
+    });
 });

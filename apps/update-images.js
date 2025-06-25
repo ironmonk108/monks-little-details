@@ -1,25 +1,53 @@
 import { MonksLittleDetails, log, error, setting, i18n } from '../monks-little-details.js';
+const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api
 
-export class UpdateImages extends FormApplication {
-    constructor(object, options = {}) {
+export class UpdateImages extends HandlebarsApplicationMixin(ApplicationV2) {
+    constructor(object, options) {
         super(object, options);
+
         this.autoscroll = true;
     }
 
-    static get defaultOptions() {
-        return foundry.utils.mergeObject(super.defaultOptions, {
-            id: "update-images",
-            classes: ["form"],
+    static DEFAULT_OPTIONS = {
+        id: "update-images",
+        tag: "form",
+        classes: ["update-images", "monks-little-details"],
+        window: {
+            contentClasses: ["standard-form"],
+            icon: "fa-solid fa-image",
+            resizable: false,
             title: "Update Images",
-            template: "modules/monks-little-details/templates/update-images.html",
-            tabs: [{ navSelector: ".tabs", contentSelector: ".sheet-body", initial: "action-container" }],
+        },
+        actions: {
+            convert: UpdateImages.convert,
+        },
+        position: {
             width: 700,
-            height: 'auto',
-        });
-    }
+            height: 'auto'
+        }
+    };
 
-    async getData() {   //this will get overwritten by Hidden Initiative if it's installed.
-        const data = await super.getData();
+    static PARTS = {
+        tabs: { template: "templates/generic/tab-navigation.hbs" },
+        details: { template: "modules/monks-little-details/templates/details-tab.hbs" },
+        results: { template: "modules/monks-little-details/templates/results-tab.hbs" },
+    };
+
+    static TABS = {
+        sheet: {
+            tabs: [
+                { id: "details", icon: "fa-solid fa-cubes" },
+                { id: "results", icon: "fa-solid fa-list" },
+            ],
+            initial: "details",
+            labelPrefix: "MonksLittleDetails.UPDATEIMAGES.TABS"
+        }
+    };
+
+    async _prepareContext(options) {
+        const context = await super._prepareContext(options);
+
+        let data = context.tabs.details;
 
         data.compendiums = {};
         for (let pack of game.packs) {
@@ -35,14 +63,18 @@ export class UpdateImages extends FormApplication {
         }
         data["sound-folder"] = game.user.getFlag("monks-little-details", "sound-folder");
 
-        return data;
+        return context;
     }
 
-    activateListeners(html) {
-        super.activateListeners(html);
-        let that = this;
-        $('.convert', html).on("click", this.convert.bind(this));
-        $('.conversion-results', html).on("scroll", this.scrollResults.bind(this))
+    async _preparePartContext(partId, context, options) {
+        context = await super._preparePartContext(partId, context, options);
+        if (partId in context.tabs) context.tab = context.tabs[partId];
+        return context;
+    }
+
+    async _onRender(context, options) {
+        await super._onRender(context, options);
+        $('.conversion-results', this.element).on("scroll", this.scrollResults.bind(this))
     }
 
     scrollResults(event) {
@@ -52,11 +84,12 @@ export class UpdateImages extends FormApplication {
             this.autoscroll = false;
     }
 
-    convert() {
-        let data = foundry.utils.expandObject(super._getSubmitData());
+    static convert() {
+        const formData = new foundry.applications.ux.FormDataExtended(this.form);
+        const data = formData.object;
 
         $('.conversion-results', this.element).empty();
-        this._tabs[0].activate("action-results", { triggerCallback: true });
+        this.changeTab("results", "sheet", { navElement: $(".tabs", this.element) });
 
         let pack = game.packs.get(data.compendium);
 
@@ -64,16 +97,16 @@ export class UpdateImages extends FormApplication {
 
         let avatars = [];
         for (let i = 1; i <= 3; i++) {
-            if (data["avatar-folder"][i])
-                avatars.push(data["avatar-folder"][i]);
-            game.user.setFlag("monks-little-details", "avatar" + i, data["avatar-folder"][i]);
+            if (data[`avatar-folder.${i}`])
+                avatars.push(data[`avatar-folder.${i}`]);
+            game.user.setFlag("monks-little-details", `avatar${i}`, data[`avatar-folder.${i}`]);
         }
 
         let tokens = [];
         for (let i = 1; i <= 3; i++) {
-            if (data["token-folder"][i])
-                tokens.push(data["token-folder"][i]);
-            game.user.setFlag("monks-little-details", "token" + i, data["token-folder"][i]);
+            if (data[`token-folder.${i}`])
+                tokens.push(data[`token-folder.${i}`]);
+            game.user.setFlag("monks-little-details", `token{i}`, data[`token-folder.${i}`]);
         }
 
         if (data["sound-folder"])
@@ -100,7 +133,7 @@ export class UpdateImages extends FormApplication {
         // Support S3 matching
         if (/\.s3\./.test(pattern)) {
             source = "s3";
-            const { bucket, keyPrefix } = FilePicker.parseS3URL(pattern);
+            const { bucket, keyPrefix } = foundry.applications.apps.FilePicker.implementation.parseS3URL(pattern);
             if (bucket) {
                 browseOptions.bucket = bucket;
                 pattern = keyPrefix;
@@ -109,7 +142,7 @@ export class UpdateImages extends FormApplication {
 
         // Retrieve wildcard content
         try {
-            const content = await FilePicker.browse(source, pattern, browseOptions);
+            const content = await foundry.applications.apps.FilePicker.implementation.browse(source, pattern, browseOptions);
             return content.files;
         } catch (err) {
             error(err);

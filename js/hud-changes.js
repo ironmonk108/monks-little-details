@@ -3,16 +3,12 @@ import { MonksLittleDetails, i18n, log, setting, patchFunc } from "../monks-litt
 export class HUDChanges {
     static init() {
         if (game.settings.get("monks-little-details", "alter-hud")) {
-            patchFunc("TokenHUD.prototype._render", function (wrapped, ...args) {
-                let result = wrapped(...args).then((a, b) => {
-                    HUDChanges.alterHUD.call(this, this.element);
-                    CONFIG.statusEffects = CONFIG.statusEffects.filter(e => e.id != "");
-                });
-
-                return result;
+            Hooks.on("renderTokenHUD", (app, html, data, options) => {
+                HUDChanges.alterHUD.call(app, html);
+                CONFIG.statusEffects = CONFIG.statusEffects.filter(e => e.id != "");
             });
 
-            patchFunc("TokenHUD.prototype._getStatusEffectChoices", function (wrapped, ...args) {
+            patchFunc("foundry.applications.hud.TokenHUD.prototype._getStatusEffectChoices", function (wrapped, ...args) {
                 if (setting('sort-statuses') != 'none') {
                     CONFIG.statusEffects = CONFIG.statusEffects.sort(function (a, b) {
                         let aName = a.name;
@@ -41,14 +37,13 @@ export class HUDChanges {
             $('#token-hud').addClass('monks-little-details').toggleClass('highlight-image', setting('alter-hud-colour'));
             const statuses = this._getStatusEffectChoices();
 
-            for (let img of $('> img,> picture', '.col.right .status-effects')) {
+            for (let img of $('> img,.effect-control > img', '#token-hud .col.right .status-effects')) {
                 let src = $(img).attr('src');
                 if (src == '') {
                     $(img).css({ 'visibility': 'hidden' });
                 } else {
-                    //const status = statuses[img.getAttribute("src")] || {};
-                    let statusId = $(img).attr('data-status-id') || $(img).attr('data-condition');
-                    let title = $(img).attr('data-tooltip') || $(img).attr('title');
+                    let statusId = $(img).attr('data-status-id') || $(img).attr('data-condition') || $(img).parent().attr('data-status-id');
+                    let title = $(img).attr('data-tooltip') || $(img).attr('title') || $(img).parent().attr('data-tooltip-text');
 
                     var condition = CONFIG.statusEffects.find(c => c.id == statusId);
                     if (condition)
@@ -59,31 +54,13 @@ export class HUDChanges {
                     if (game.system.id == "pf2e") {
                         $('<div>')
                             .addClass('effect-name')
-                            //.attr('title', title)
                             .html(title)
-                            .insertAfter($('img', img));
+                            .insertAfter(img);
                     } else {
-                        $('<div>')
-                            .addClass('effect-container')//$(img).attr('class'))
-                            //.toggleClass('active', !!status.isActive)
-                            //.attr('title', title)
-                            //.attr('src', $(img).attr('src'))
-                            .insertAfter(img)
-                            .append(img)//.removeClass('effect-control'))
-                            .append($('<div>').addClass('effect-name').html(title)
-                            );
+                        $('<div>').addClass('effect-container').insertAfter(img).append(img).append($('<div>').addClass('effect-name').html(title));
                     }
                 }
             };
-
-            $('.col.right .status-effects > div.pf2e-effect-img-container', html).each(function () {
-                let img = $('img', this);
-                let title = img.attr('data-condition');
-                let div = $('<div>').addClass('effect-name').attr('title', title).html(title).insertAfter(img);
-                //$(this).append(div);
-                //const status = statuses[img.attr('src')] || {};
-                //$(this).attr('src', img.attr('src')).toggleClass('active', !!status.isActive);
-            });
 
             if (game.system.id !== 'pf2e' && setting("clear-all")) {
                 $('.col.right .status-effects', html).append(
@@ -93,7 +70,7 @@ export class HUDChanges {
 
             if (setting('sort-statuses') == 'columns') {
                 let rows = Math.max(Math.ceil(($('.status-effects', html).children().length - 1) / 4), 1);
-                $('.status-effects', html).css({ 'grid-template-rows': `repeat(${rows}, ${100 / rows}%)`, 'grid-auto-flow': 'column' });
+                $('.status-effects', html).css({ 'grid-template-rows': `repeat(${rows}, ${(100 / rows) - ((100 / (rows - 1)) * 0.09)}%)`, 'grid-auto-flow': 'column' });
             }
         }
     }

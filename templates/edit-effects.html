@@ -1,45 +1,43 @@
-<form>
-    <div class="dialog-content">
-        <div class="items-list alternate-rows">
-            <div class="item-header flexrow" style="position: relative;">
-                <div class="item-detail" style="margin-left: 4px;text-align: left;">{{localize 'MonksLittleDetails.Code'}}</div>
-                <div class="item-name">{{localize 'MonksLittleDetails.Name'}}</div>
-                <div class="item-name">{{localize 'MonksLittleDetails.FileName'}}</div>
-                <div class="item-controls flexrow" buttons="2">
-                    <a class="item-control text item-add"><i class="fas fa-plus"></i> {{localize 'MonksLittleDetails.Add'}}</a>
-                </div>
+<div>
+    <div class="effects">
+        <header>
+            <div class="code">{{localize 'MonksLittleDetails.Code'}}</div>
+            <div class="name">{{localize 'MonksLittleDetails.Name'}}</div>
+            <div class="filename">{{localize 'MonksLittleDetails.FileName'}}</div>
+
+            <div class="controls">
+                <a data-action="addEffect"><i class="fa-regular fa-square-plus"></i></a>
             </div>
+        </header>
 
-            <ol class="item-list" style="max-height: 500px;">
-                {{#each effects}}
-                <li class="item flexrow" data-id="{{this.id}}">
-                    <div class="item-detail" style="text-align:left;">
-                        <input type="text" name="id" autocomplete="off" value="{{this.id}}" />
-                    </div>
+        <ol class="scrollable effects-list" data-effects>
+            {{#each effects as |effect i|}}
+            <li class="effect" data-index="{{i}}" data-effect-id="{{effect.id}}">
+                <div class="code">
+                    <input type="text" readonly name="{{concat "effects." effect.id ".id"}}" value="{{effect.id}}" />
+                </div>
 
-                    <div class="item-name">
-                        <input type="text" name="label" autocomplete="off" value="{{this.label}}" />
-                    </div>
+                <div class="code">
+                    <input type="text" name="{{concat "effects." effect.id ".name"}}" value="{{effect.name}}" data-action="updateEffect"/>
+                </div>
 
-                    <div class="item-name item-icon flexrow">
-                        <input type="text" name="icon-{{this.id}}" autocomplete="off" value="{{this.icon}}" />
-                        <button class="file-picker" type="button" data-type="imagevideo" data-target="icon-{{this.id}}" title="Browse Files" tabindex="-1"><i class="fas fa-file-import fa-fw"></i></button>
-                    </div>
+                <div class="filename">
+                    <file-picker data-type="imagevideo" name="{{concat "effects." effect.id ".img"}}" value="{{effect.img}}" data-action="updateEffect" />
+                </div>
 
-                    <div class="item-controls flexrow" buttons="2">
-                        <a class="item-control item-delete"><i class="fas fa-trash"></i></a>
-                    </div>
-                </li>
-                {{/each}}
-            </ol>
-        </div>
+                <div class="controls">
+                    <a data-action="deleteEffect" data-tooltip="Delete Effect"><i class="fas fa-trash"></i></a>
+                </div>
+            </li>
+            {{/each}}
+        </ol>
     </div>
-    <footer class="sheet-footer flexrow">
-        <button type="button" name="submit">
-            <i class="far fa-save"></i> {{localize 'MonksLittleDetails.SaveChanges'}}
-        </button>
-        <button type="button" name="reset">
+    <footer class="sheet-footer flexrow" style="flex-grow:0;">
+        <button type="button" name="reset" data-action="reset">
             <i class="fas fa-undo"></i> {{localize 'MonksLittleDetails.ResetDefaults'}}
         </button>
+        <button type="submit" name="submit" data-action="submit">
+            <i class="far fa-save"></i> {{localize 'MonksLittleDetails.SaveChanges'}}
+        </button>
     </footer>
-</form>
+</div>
