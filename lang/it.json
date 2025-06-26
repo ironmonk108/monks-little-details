@@ -13,10 +13,14 @@
 	"MonksLittleDetails.core-css-changes.hint": "Aggiorna alcuni aspetti del css core per visualizzare le cose un po' meglio.",
 	"MonksLittleDetails.window-css-changes.name": "Cambia Stile Finestra",
 	"MonksLittleDetails.window-css-changes.hint": "Qualche volta lo sfondo semitrasparente delle finestre rende difficile vedere",
+	"MonksLittleDetails.chat-css-changes.name": "Cambia Sfondo Chat",
+	"MonksLittleDetails.chat-css-changes.hint": "Aggiungi uno sfondo alla finestra della chat per rendere più facile la visualizzazione dei messaggi",
 	"MonksLittleDetails.movement-key.name": "Tasto Movimento",
 	"MonksLittleDetails.movement-key.hint": "Imposta il tasto da premere per spostare i token in una nuova posizione.",
 	"MonksLittleDetails.show-notify.name": "Mantieni Notifica",
 	"MonksLittleDetails.show-notify.hint": "Lascia accesa l'icona di notifica della chat se ti trovi in un'altra scheda e arriva un messaggio.",
+	"MonksLittleDetails.highlight-notify.name": "Evidenzia Notifica",
+	"MonksLittleDetails.highlight-notify.hint": "Invece di un pallino per avvisarti, evidenzia l'intero pulsante della scheda per mostrare l'attività",
 	"MonksLittleDetails.compendium-view-artwork.name": "Visualizza artwork nel Compendio Scene",
 	"MonksLittleDetails.compendium-view-artwork.hint": "Apri l'artwork della scena se fai click sul nome della scena",
 	"MonksLittleDetails.key-swap-tool.name": "Usa tasti per inveritre strumenti",
@@ -35,7 +39,7 @@
 	"MonksLittleDetails.pan-to-combatant.hint": "Panoramica sul combattente attuale per il GM",
 	"MonksLittleDetails.large-print.name": "Grandi Dimensioni",
 	"MonksLittleDetails.large-print.hint": "Visualizza la notifica del turno in grandi dimensioni",
-	"MonksLittleDetails.open-actor.name": "Apri Attore",
+	"MonksLittleDetails.open-actor.name": "Apri Personaggio",
 	"MonksLittleDetails.open-actor.hint": "Fai clic con il tasto destro sull'icona della barra laterale dell'attore per aprire la scheda del personaggio del giocatore o l'ultima scheda dell'attore aperta.",
 	"MonksLittleDetails.update-images.name": "Aggiorna Immagini",
 	"MonksLittleDetails.compendium-shortcuts.name": "Scorciatoie Compendio",
@@ -57,6 +61,8 @@
 	"MonksLittleDetails.pause-border-colour.hint": "Cambia il colore del bordo della pausa.",
 	"MonksLittleDetails.dual-monitor.name": "Doppio Monitor",
 	"MonksLittleDetails.dual-monitor.hint": "Utilizzando un doppio monitor, hai una nuova finestra pop-up al centro su un lato o sull'altro",
+	"MonksLittleDetails.lighting-progress.name": "Progresso Illuminazione",
+	"MonksLittleDetails.lighting-progress.hint": "Mostra una barra di avanzamento quando l'illuminazione viene aggiornata",
 
 	"MonksLittleDetails.SystemChanges": "Modifiche Sistema",
 	"MonksLittleDetails.AddedFeatures": "Funzionalità aggiunte",
@@ -103,7 +109,7 @@
 
 	"MonksLittleDetails.pausemove.noone": "Nessuno",
 	"MonksLittleDetails.pausemove.everyone": "Tutti",
-		"MonksLittleDetails.pausemove.players": "Giocatori",
+	"MonksLittleDetails.pausemove.players": "Giocatori",
 
 	"MonksLittleDetails.sortstatus.none": "Nessuno",
 	"MonksLittleDetails.sortstatus.rows": "Righe",
@@ -116,5 +122,10 @@
 	"SIDEBAR.SortModeType": "Ordina per Tipo",
 	"SIDEBAR.SortModeSource": "Ordina per Fonte",
 	"FOLDER.SortType": "Tipo",
-	"FOLDER.SortSource": "Fonte"
+	"FOLDER.SortSource": "Fonte",
+
+	"MonksLittleDetails.UPDATEIMAGES.TABS": {
+		"details": "Dettagli",
+		"results": "Risultati"
+	}
 }
