@@ -1,3 +1,25 @@
+# version 13.01
+
+v13 Compatibility
+
+Changed the Compendium Quicklinks to Compendium Filters.  So you can now quickly filter compendiums by type.
+
+Added the ability to close the Main Menu by clicking anywhere on the screen.  Instead of trying to figure out what key press actually closes that window.
+
+Removed the swap Token HUD buttons option because v13 altered the UI to make unecessary.
+
+Added chat sidebar changes because I felt like it made it really hard to see those chat messages.  But you can turn it off with a setting.
+
+Added tab highlighting for side bar tabs to indicate when a tab needs you attention.
+
+Removed the setting to move the paused icon higher since v13 added increased awareness of the game being paused.
+
+Changed the Darkness progress from being on the tool bar to a notification message.  Due to changes in the v13 UI.
+
+Removed hiding the cursor for users that don't have permission, because v13 has locked me out of that option.
+
+Updated the README and the Foundry Website to list all the things this module does.
+
 # version 12.04
 
 Fixed deprecation warning when sorting conditions

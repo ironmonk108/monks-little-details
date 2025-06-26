@@ -1,13 +1,13 @@
 {
   "title": "Monk's Little Details",
   "description": "Things to tidy up the interface and flow",
-  "version": "12.04",
+  "version": "13.01",
   "authors": [
     {
       "name": "IronMonk",
-      "discord": "ironmonk88#4075",
+      "discord": "ironmonk108",
 	  "flags": {
-		  "github": "ironmonk88",
+		  "github": "ironmonk108",
 		  "patreon": "ironmonk",
 		  "ko-fi": "ironmonk88"
 	  }
@@ -68,18 +68,18 @@
   "styles": [
     "css/monks-little-details.css"
   ],
-  "url": "https://github.com/ironmonk88/monks-little-details",
-  "download": "https://github.com/ironmonk88/monks-little-details/archive/12.04.zip",
-  "manifest": "https://github.com/ironmonk88/monks-little-details/releases/latest/download/module.json",
-  "bugs": "https://github.com/ironmonk88/monks-little-details/issues",
+  "url": "https://github.com/ironmonk108/monks-little-details",
+  "download": "https://github.com/ironmonk108/monks-little-details/archive/13.01.zip",
+  "manifest": "https://github.com/ironmonk108/monks-little-details/releases/latest/download/module.json",
+  "bugs": "https://github.com/ironmonk108/monks-little-details/issues",
   "id": "monks-little-details",
   "compatibility": {
-    "minimum": "12",
-    "verified": "12"
+    "minimum": "13",
+    "verified": "13"
   },
   "name": "monks-little-details",
-  "minimumCoreVersion": "12",
-  "compatibleCoreVersion": "12",
+  "minimumCoreVersion": "13",
+  "compatibleCoreVersion": "13",
   "flags": {
     "allowBugReporter": true
   }
