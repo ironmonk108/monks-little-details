@@ -330,7 +330,11 @@ body.illandril-token-hud-scale--hud-button-scale #token-hud.monks-little-details
     color: darkred;
 }
 
-body.change-windows.theme-dark:not(.system-forbidden-lands) .application:not(.image-popout) {
+body.change-windows:not(.system-forbidden-lands) .window-app.app:not(.image-popout) {
+    background-color: var(--color-border-dark-5);
+}
+
+body.change-windows.theme-dark:not(.system-forbidden-lands) .application.theme-dark:not(.image-popout) {
     background: var(--color-cool-5);
 }
 
@@ -341,7 +345,7 @@ body.change-windows:not(.system-forbidden-lands) .window-app:not(.dnd5e2.charact
     border-top-left-radius: 4px;
 }
 
-body.change-windows #context-menu:not(.dnd5e2) {
+body.change-windows #context-menu.theme-dark:not(.dnd5e2) {
     background: #0f002c;
 }
 

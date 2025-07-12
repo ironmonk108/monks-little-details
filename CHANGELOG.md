@@ -1,3 +1,13 @@
+# version 13.02
+
+Fixing light and dark theme issues
+
+Fixing ImagePopout code name
+
+Fixing issues with finding the window close button
+
+Fixing issue with applying image scaling to scene icons
+
 # version 13.01
 
 v13 Compatibility

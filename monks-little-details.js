@@ -111,14 +111,14 @@ export class MonksLittleDetails {
                                 let img = entry.img;
                                 if (VideoHelper.hasVideoExtension(img))
                                     ImageHelper.createThumbnail(img, { width: entry.width, height: entry.height }).then(img => {
-                                        new ImagePopout(img.thumb, {
+                                        new foundry.applications.apps.ImagePopout(img.thumb, {
                                             title: entry.name,
                                             shareable: true,
                                             uuid: entry.uuid
                                         }).render(true);
                                     });
                                 else {
-                                    new ImagePopout(img, {
+                                    new foundry.applications.apps.ImagePopout(img, {
                                         title: entry.name,
                                         shareable: true,
                                         uuid: entry.uuid
@@ -239,10 +239,10 @@ export class MonksLittleDetails {
 
         patchFunc("foundry.applications.api.DocumentSheetV2.prototype._renderFrame", function (wrapped, ...args) {
             const frame = wrapped(...args);
-            if (this.document instanceof foundry.abstract.Document && this.document.id && (this.document.src || this.document.img || this.document.background?.src || this.document.texture?.src)) {
+            if (this.document instanceof foundry.abstract.Document && this.document.id && (this.document.src || this.document.img || this.document.background?.src || this.document.texture?.src) && this.window.close) {
                 const copyLabel = "Copy image file path";
                 const copyId = `<button type="button" class="header-control fa-solid fa-file-image icon" data-action="copyImagePath"  data-tooltip="${copyLabel}" aria-label="${copyLabel}"></button>`;
-                this.window.close.insertAdjacentHTML("beforebegin", copyId);
+                this.window.close?.insertAdjacentHTML("beforebegin", copyId);
             }
 
             return frame;
@@ -581,7 +581,7 @@ export class MonksLittleDetails {
         style.id = "monks-css-changes";
         if (setting("core-css-changes")) {
             innerHTML += `
-.directory:not(.compendium-sidebar) .directory-list .directory-item img {
+.directory:not(.compendium-sidebar):not(.scenes-sidebar) .directory-list .directory-item img {
     object-fit: contain !important;
     object-position: center !important;
 }
@@ -1232,7 +1232,8 @@ Hooks.on("renderDocumentDirectory", (app, html, data) => {
             parseTree(child);
         }
     }
-    parseTree(data.tree);
+    if (data.tree)
+        parseTree(data.tree);
 });
 
 Hooks.on("pauseGame", (state) => {
