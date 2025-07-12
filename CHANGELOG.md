@@ -1,3 +1,7 @@
+# version 13.03
+
+Fixed issue where previous expand/collapse state was not being remembered
+
 # version 13.02
 
 Fixing light and dark theme issues
