@@ -92,11 +92,11 @@
 	"MonksLittleDetails.TerrainLayer": "Livello Terreno",
 
 	"MonksLittleDetails.StatusCharmed": "Ammaliato",
-	"MonksLittleDetails.StatusExhausted": "Esausto",
+	"MonksLittleDetails.StatusExhausted": "Indebolito",
 	"MonksLittleDetails.StatusGrappled": "Afferrato",
 	"MonksLittleDetails.StatusIncapacitated": "Incapacitato",
 	"MonksLittleDetails.StatusInvisible": "Invisibile",
-	"MonksLittleDetails.StatusPetrified": "Petrificato",
+	"MonksLittleDetails.StatusPetrified": "Pietrificato",
 	"MonksLittleDetails.StatusHasted": "Velocizzato",
 	"MonksLittleDetails.StatusSlowed": "Rallentato",
 	"MonksLittleDetails.StatusConcentrating": "Concentrazione",
