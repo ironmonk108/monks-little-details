@@ -37,7 +37,7 @@ body.mld-paused:after {
     color: var(--color-text-hyperlink);
 }
 
-.group-header {
+.form-group.group-header {
     font-weight: bold;
     padding: 8px 20px;
     background-color: rgba(255, 255, 255, 0.4);
@@ -334,7 +334,7 @@ body.change-windows:not(.system-forbidden-lands) .window-app.app:not(.image-popo
     background-color: var(--color-border-dark-5);
 }
 
-body.change-windows.theme-dark:not(.system-forbidden-lands) .application.theme-dark:not(.image-popout) {
+body.change-windows.theme-dark:not(.system-forbidden-lands) .application.theme-dark:not(.image-popout):not(.prosemirror) {
     background: var(--color-cool-5);
 }
 

@@ -2,7 +2,8 @@
 import { MMCQ } from "./quantize.js";
 import { UpdateImages } from "./apps/update-images.js";
 import { HUDChanges } from "./js/hud-changes.js";
-import { MonksCompendium} from "./apps/compendium.js";
+import { MonksCompendium } from "./apps/compendium.js";
+import { WithMLDMacroConfig } from "./apps/macro-config.js"
 
 export let debugEnabled = 0;
 
@@ -456,6 +457,22 @@ export class MonksLittleDetails {
             CONFIG.statusEffects = CONFIG.statusEffects.concat(setting("additional-effects") || []);
         }
 
+        if (game.user.getFlag("monks-little-details", "sidebar-tab")) {
+            let tab = game.user.getFlag("monks-little-details", "sidebar-tab");
+            if (tab && ui.sidebar.tabGroups.primary != tab) {
+                ui.sidebar.changeTab(tab, "primary");
+            }
+        }
+        if (game.user.getFlag("monks-little-details", "sidebar-expanded") !== undefined) {
+            let expanded = game.user.getFlag("monks-little-details", "sidebar-expanded");
+            if (expanded != ui.sidebar.expanded) {
+                ui.sidebar.toggleExpanded(expanded)
+            }
+        }
+
+        CONFIG.Macro.sheetClasses.chat['core.MacroConfig'].cls = WithMLDMacroConfig(CONFIG.Macro.sheetClasses.chat['core.MacroConfig'].cls);
+        CONFIG.Macro.sheetClasses.script['core.MacroConfig'].cls = WithMLDMacroConfig(CONFIG.Macro.sheetClasses.script['core.MacroConfig'].cls);
+
         MonksLittleDetails.injectCSS();
 
         if (setting("pause-border") && game.paused && $('#board').length) {
@@ -673,6 +690,14 @@ export class MonksLittleDetails {
                 mid.y = (mid.y / tokens.length);
 
                 let updates = [];
+                let operation = {
+                    movement: {},
+                    pack: null,
+                    parent: canvas.scene,
+                    animate: false,
+                    bypass: true,
+                    isPaste: true
+                };
                 for (let i = 0; i < tokens.length; i++) {
                     let offset = { x: tokens[i].x - mid.x, y: tokens[i].y - mid.y };
                     let pt = { x: pos.x + offset.x, y: pos.y + offset.y };
@@ -682,11 +707,16 @@ export class MonksLittleDetails {
                     pt.y = Math.floor(pt.y / gs) * gs;
 
                     //t.update({ x: px[0], y: px[1] }, { animate: false });
-                    updates.push({ _id: tokens[i].id, x: pt.x, y: pt.y });
+                    updates.push({ _id: tokens[i].id });
+                    operation.movement[tokens[i].id] = {
+                        constrainOptions: { ignoreWalls: true, ignoreCost: true },
+                        waypoints: [{ x: pt.x, y: pt.y }]
+                    };
                 }
                 if (updates.length) {
+                    operation.updates = updates;
                     MonksLittleDetails.movingToken = true;
-                    await canvas.scene.updateEmbeddedDocuments("Token", updates, { animate: false, bypass: true });
+                    await canvas.scene.updateEmbeddedDocuments("Token", updates, operation);
                     MonksLittleDetails.movingToken = false;
                 }
             }
@@ -859,13 +889,15 @@ Hooks.on("renderSettingsConfig", (app, html, data) => {
     $('<div>').addClass('form-group group-header').html(i18n("MonksLittleDetails.SystemChanges")).insertBefore($('[name="monks-little-details.alter-hud"]').parents('div.form-group:first'));
     $('<div>').addClass('form-group group-header').html(i18n("MonksLittleDetails.AddedFeatures")).insertBefore($('[name="monks-little-details.scene-palette"]').parents('div.form-group:first'));
 
-    let pauseBorder = $('input[name="monks-little-details.pause-border-colour"]').val();
-    pauseBorder = pauseBorder.slice(0, 7);
-    if (pauseBorder && !pauseBorder.startsWith("#")) {
-        pauseBorder = "#" + pauseBorder;
+    let pauseBorder = $('input[name="monks-little-details.pause-border-colour"]', html).val();
+    if (pauseBorder != undefined) {
+        pauseBorder = pauseBorder.slice(0, 7);
+        if (pauseBorder && !pauseBorder.startsWith("#")) {
+            pauseBorder = "#" + pauseBorder;
+        }
+        let pauseColour = $(`<color-picker style="flex: 0 0 140px;" value="${pauseBorder}" name="monks-little-details.pause-border-colour">`);
+        $('input[name="monks-little-details.pause-border-colour"]').replaceWith(pauseColour);
     }
-    let pauseColour = $(`<color-picker style="flex: 0 0 140px;" value="${pauseBorder}" name="monks-little-details.pause-border-colour">`);
-    $('input[name="monks-little-details.pause-border-colour"]').replaceWith(pauseColour);
 });
 
 Hooks.on("renderCompendium", (compendium, html, data) => {
@@ -1069,26 +1101,6 @@ Hooks.on("getFolderContextOptions", (app, entries) => {
     });
 });
 
-Hooks.on("renderMacroConfig", (app, html, data) => {
-    $('.form-footer', html).prepend(
-        $("<button>")
-            .attr("type", "button")
-            .html('<i class="fas fa-file-download"></i> Apply')
-            .on("click", (event) => {
-                event.currentTarget = event.currentTarget.closest('form');
-                app._onSubmitForm.call(app, {
-                    closeOnSubmit: false,
-                    handler: async function (event, form, formData, options = {}) {
-                        if (!this.isEditable) return;
-                        const { updateData, ...updateOptions } = options;
-                        const submitData = this._prepareSubmitData(event, form, formData, updateData);
-                        await this._processSubmitData(event, form, submitData, updateOptions);
-                        ui.notifications.info("Macro saved");
-                    }
-                }, event);
-            }));
-})
-
 Hooks.on('renderModuleManagement', (app, html, data) => {
     if (setting("module-management-changes")) {
         let requires = {};
@@ -1243,7 +1255,9 @@ Hooks.on("pauseGame", (state) => {
 });
 
 Hooks.on("renderChatMessageHTML", (app, html, data) => {
-    $(".message-timestamp", html).attr("title", new Date(data.message.timestamp).toLocaleString());
+    if (data) {
+        $(".message-timestamp", html).attr("title", new Date(data.message.timestamp).toLocaleString());
+    }
 });
 
 Hooks.on("renderMainMenu", (app, html, data, options) => {
@@ -1252,4 +1266,12 @@ Hooks.on("renderMainMenu", (app, html, data, options) => {
             ui.menu.toggle();
         }
     });
+});
+
+Hooks.on("changeSidebarTab", (tab) => {
+    game.user.setFlag("monks-little-details", "sidebar-tab", tab.tabName);
+});
+
+Hooks.on("collapseSidebar", (app, collapse) => {
+    game.user.setFlag("monks-little-details", "sidebar-expanded", app.expanded);
 });

@@ -1,3 +1,17 @@
+# version 13.03
+
+Added size and position persisting to the Macro Edit window.  So you don't have to keep doing that any time you want to re-edi a macro
+
+Fixed an issue with Prosemirror dialogs not styling properly
+
+Saved the last tab shown and the expand state of the sidebar so next load Foundry will restore what you were looking at.
+
+Fixed the movement key so that it now ignores walls
+
+Fixed error with rendering the settings config
+
+Fixed error with rendering chat messages
+
 # version 13.02
 
 Fixing light and dark theme issues
