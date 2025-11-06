@@ -12,6 +12,10 @@ Fixed error with rendering the settings config
 
 Fixed error with rendering chat messages
 
+Updated Polish translations, thank you Lioheart
+
+Updated Italian translations, thank you GregoryWarn
+
 # version 13.02
 
 Fixing light and dark theme issues
