@@ -183,6 +183,7 @@ body.illandril-token-hud-scale--hud-button-scale #token-hud.monks-little-details
     padding: 0;
     opacity: 0.5;
     padding-right: calc(100% - 24px);
+    background-position-x: 0 !important;
 }
 
 .system-pf2e #token-hud.monks-little-details .status-effects .effect-control,
