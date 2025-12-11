@@ -51,7 +51,7 @@ export class HUDChanges {
 
                     $(img).removeAttr('data-tooltip');
 
-                    if (game.system.id == "pf2e") {
+                    if (["pf2e", "daggerheart"].includes(game.system.id)) {
                         $('<div>')
                             .addClass('effect-name')
                             .html(title)
@@ -62,7 +62,7 @@ export class HUDChanges {
                 }
             };
 
-            if (game.system.id !== 'pf2e' && setting("clear-all")) {
+            if (!["pf2e", "daggerheart"].includes(game.system.id) && setting("clear-all")) {
                 $('.col.right .status-effects', html).append(
                     $('<div>').addClass('clear-all').html(`<i class="fas fa-times-circle"></i> ${i18n("MonksLittleDetails.ClearAll")}`).on("click", HUDChanges.clearAll.bind(this))
                 );
