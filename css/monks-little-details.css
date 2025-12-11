@@ -284,6 +284,10 @@ body.illandril-token-hud-scale--hud-button-scale #token-hud.monks-little-details
     opacity: 1;
 }
 
+#token-hud.monks-little-details .status-effects .palette-category-title {
+    grid-column: span 4;
+}
+
 .package-list .package .package-metadata .tag {
     padding: 0px 4px;
     border: 1px solid #2e6da4;
