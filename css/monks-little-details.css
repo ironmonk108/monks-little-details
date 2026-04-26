@@ -132,12 +132,19 @@ body.reposition-collapse #sidebar.collapsed #sidebar-tabs a.collapse {
 }
 
 #token-hud.monks-little-details .status-effects {
+    --effect-padding: 10px;
     width: unset !important;
     grid-template-columns: 130px 130px 130px 130px !important;
     font-size: 16px;
     line-height: var(--effect-size);
+    height: calc(8 * (var(--effect-size) + var(--effect-padding) + var(--effect-gap)) + 2 * var(--effect-gap));
     text-align: left;
     background: rgba(0, 0, 0, 0.8);
+    overflow: visible;
+}
+
+#hud.theme-light #token-hud.monks-little-details .status-effects {
+    background: rgba(255, 255, 255, 0.8);
 }
 
 body.system-pf2e #token-hud.monks-little-details .status-effects,
@@ -330,11 +337,11 @@ body.illandril-token-hud-scale--hud-button-scale #token-hud.monks-little-details
     color: darkred;
 }
 
-body.change-windows:not(.system-forbidden-lands) .window-app.app:not(.image-popout) {
-    background-color: var(--color-border-dark-5);
+body.change-windows.theme-dark:not(.system-forbidden-lands) .sidebar-tab:not(.theme-light) {
+    background: var(--color-cool-5);
 }
 
-body.change-windows.theme-dark:not(.system-forbidden-lands) .application.theme-dark:not(.image-popout):not(.prosemirror) {
+body.change-windows.theme-dark:not(.system-forbidden-lands) .application:not(.theme-light):not(.image-popout):not(.prosemirror) {
     background: var(--color-cool-5);
 }
 
@@ -350,7 +357,11 @@ body.change-windows #context-menu.theme-dark:not(.dnd5e2) {
 }
 
 body.change-chat .chat-sidebar:not(.sidebar-popout) {
-    background: var(--sidebar-background, var(--color-cool-5-90))
+    background: var(--sidebar-background, var(--color-cool-5));
+}
+
+body.change-chat .chat-sidebar.themed.theme-light:not(.sidebar-popout) {
+    background: url("../../../ui/parchment.jpg");
 }
 
 body.change-chat #sidebar-content #chat .chat-scroll {
@@ -725,11 +736,15 @@ textarea[name="command"] {
     align-items: center;
     display: grid;
     gap: 0.25rem;
-    grid-template-columns: 6rem 16rem 23rem 1.5rem;
+    grid-template-columns: 11% 35% 50% 4%;
     margin: 0;
     padding: 2px;
     position: relative;
     text-align: left;
+}
+
+.monks-little-details.edit-effects .effects header {
+    gap: 0.1rem;
 }
 
 .monks-little-details.edit-effects .effects ol li {

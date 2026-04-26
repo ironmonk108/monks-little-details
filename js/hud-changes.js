@@ -5,24 +5,32 @@ export class HUDChanges {
         if (game.settings.get("monks-little-details", "alter-hud")) {
             Hooks.on("renderTokenHUD", (app, html, data, options) => {
                 HUDChanges.alterHUD.call(app, html);
-                CONFIG.statusEffects = CONFIG.statusEffects.filter(e => e.id != "");
             });
 
             patchFunc("foundry.applications.hud.TokenHUD.prototype._getStatusEffectChoices", function (wrapped, ...args) {
+                let statuses = wrapped(...args);
                 if (setting('sort-statuses') != 'none') {
-                    CONFIG.statusEffects = CONFIG.statusEffects.sort(function (a, b) {
-                        let aName = a.name;
-                        let bName = b.name;
-                        if (!aName) aName = i18n(a.label);
-                        if (!bName) bName = i18n(b.label);
-                        let aid = aName || a.id || a;
-                        let bid = bName || b.id || b;
-                        return (aid > bid ? 1 : (aid < bid ? -1 : 0));
-                        //return (a.id == undefined || a.id > b.id ? 1 : (a.id < b.id ? -1 : 0)); //(a.label == undefined || i18n(a.label) > i18n(b.label) ? 1 : (i18n(a.label) < i18n(b.label) ? -1 : 0));
+                    const sortedKeys = Object.keys(statuses).sort(function (a, b) {
+                        const aEffect = statuses[a];
+                        const bEffect = statuses[b];
+
+                        let aName = aEffect.name;
+                        let bName = bEffect.name;
+                        if (!aName) aName = i18n(aEffect.label);
+                        if (!bName) bName = i18n(bEffect.label);
+
+                        const aid = aName || aEffect.id || a;
+                        const bid = bName || bEffect.id || b;
+
+                        return aid > bid ? 1 : aid < bid ? -1 : 0;
                     });
+
+                    statuses = Object.fromEntries(
+                        sortedKeys.map(key => [key, statuses[key]])
+                    );
                 }
 
-                return wrapped(...args);
+                return statuses;
             });
         }
     }
@@ -45,11 +53,11 @@ export class HUDChanges {
                     let statusId = $(img).attr('data-status-id') || $(img).attr('data-condition') || $(img).parent().attr('data-status-id');
                     let title = $(img).attr('data-tooltip') || $(img).attr('title') || $(img).parent().attr('data-tooltip-text');
 
-                    var condition = CONFIG.statusEffects.find(c => c.id == statusId);
+                    var condition = CONFIG.statusEffects[statusId];
                     if (condition)
                         title = i18n(condition.name);
 
-                    $(img).removeAttr('data-tooltip');
+                    $(img).removeAttr('data-tooltip-text');
 
                     if (game.system.id == "pf2e") {
                         $('<div>')
@@ -68,10 +76,11 @@ export class HUDChanges {
                 );
             }
 
-            if (setting('sort-statuses') == 'columns') {
-                let rows = Math.max(Math.ceil(($('.status-effects', html).children().length - 1) / 4), 1);
+            let rows = Math.max(Math.ceil(($('.status-effects', html).children().length - 1) / 4), 1);
+            if (setting('sort-statuses') == 'columns') {   
                 $('.status-effects', html).css({ 'grid-template-rows': `repeat(${rows}, ${(100 / rows) - ((100 / (rows - 1)) * 0.09)}%)`, 'grid-auto-flow': 'column' });
             }
+            $('.status-effects', html).get(0).style.setProperty('--effect-padding', (6 + 4 * (rows - 10)) + 'px');
         }
     }
 

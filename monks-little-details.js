@@ -76,7 +76,7 @@ export class MonksLittleDetails {
         MonksLittleDetails.SOCKET = "module.monks-little-details";
 
         MonksLittleDetails._rejectlist = {
-            "add-extra-statuses": ["pf2e"],
+            "add-extra-statuses": [],
             "alter-hud": ["sfrpg"]
         }
         MonksLittleDetails._onlylist = {
@@ -240,7 +240,7 @@ export class MonksLittleDetails {
 
         patchFunc("foundry.applications.api.DocumentSheetV2.prototype._renderFrame", function (wrapped, ...args) {
             const frame = wrapped(...args);
-            if (this.document instanceof foundry.abstract.Document && this.document.id && (this.document.src || this.document.img || this.document.background?.src || this.document.texture?.src) && this.window.close) {
+            if (this.document instanceof foundry.abstract.Document && this.document.id && (this.document instanceof CONFIG.Scene.documentClass ? this.document.levels.sorted[0].background.src : this.document.src || this.document.img || this.document.background?.src || this.document.texture?.src) && this.window.close) {
                 const copyLabel = "Copy image file path";
                 const copyId = `<button type="button" class="header-control fa-solid fa-file-image icon" data-action="copyImagePath"  data-tooltip="${copyLabel}" aria-label="${copyLabel}"></button>`;
                 this.window.close?.insertAdjacentHTML("beforebegin", copyId);
@@ -349,7 +349,7 @@ export class MonksLittleDetails {
     }
 
     static onCopyImagePath = function (event) {
-        let src = (this.document.src || this.document.img || this.document.background?.src || this.document.texture?.src);
+        let src = this.document instanceof CONFIG.Scene.documentClass ? this.document.levels.sorted[0].background.src : (this.document.src || this.document.img || this.document.background?.src || this.document.texture?.src);
         event.preventDefault();
         event.stopPropagation(); // Don't trigger other events
         if (event.detail > 1) return; // Ignore repeated clicks
@@ -454,7 +454,17 @@ export class MonksLittleDetails {
 
     static async ready() {
         if (MonksLittleDetails.canDo("add-extra-statuses") && setting("add-extra-statuses")) {
-            CONFIG.statusEffects = CONFIG.statusEffects.concat(setting("additional-effects") || []);
+            for (let e of setting("additional-effects") || []) {
+                if (e.id && e.name) {
+                    if (game.system.id == "pf2e") {
+                        if (!CONFIG.statusEffects[e.id])
+                            CONFIG.statusEffects[e.id] = e;
+                    } else {
+                        if (e.id && !CONFIG.statusEffects.some(s => s.id == e.id))
+                            CONFIG.statusEffects[e.id] = e;
+                    }
+                }
+            }
         }
 
         if (game.user.getFlag("monks-little-details", "sidebar-tab")) {
@@ -598,10 +608,6 @@ export class MonksLittleDetails {
         style.id = "monks-css-changes";
         if (setting("core-css-changes")) {
             innerHTML += `
-.directory:not(.compendium-sidebar):not(.scenes-sidebar) .directory-list .directory-item img {
-    object-fit: contain !important;
-    object-position: center !important;
-}
 
 .directory:not(.compendium-sidebar) .directory-list .directory-item > i.fa-user {
     font-size: 40px;
@@ -706,6 +712,10 @@ export class MonksLittleDetails {
                     pt.x = Math.floor(pt.x / gs) * gs;
                     pt.y = Math.floor(pt.y / gs) * gs;
 
+                    // Make sure that the position is within the scene boundaries
+                    pt.x = Math.clamp(pt.x, 0, canvas.scene.dimensions.width - tokens[i].width * gs);
+                    pt.y = Math.clamp(pt.y, 0, canvas.scene.dimensions.height - tokens[i].height * gs);
+
                     //t.update({ x: px[0], y: px[1] }, { animate: false });
                     updates.push({ _id: tokens[i].id });
                     operation.movement[tokens[i].id] = {
@@ -800,7 +810,7 @@ export class MonksLittleDetails {
 
     static async updateSceneBackground(hexCode, ctrl, element) {
         $('.background-palette-container', element).remove();
-        await MonksLittleDetails.currentScene.update({ backgroundColor: hexCode });
+        $("input", ctrl).val(hexCode).get(0).dispatchEvent(new Event('change'));
     }
 
     static updatePlayerColour(hexCode, ctrl, element) {
@@ -845,7 +855,7 @@ Hooks.on('renderSceneConfig', async (app, html, options) => {
             let element = $(this).siblings('.background-palette-container');
             if (element.length == 0) {
                 element = $('<div>').addClass('background-palette-container flexrow').insertAfter(this);
-                MonksLittleDetails.getPalette(MonksLittleDetails.currentScene.background.src, element, "", MonksLittleDetails.updateSceneBackground);
+                MonksLittleDetails.getPalette(MonksLittleDetails.currentScene.levels.sorted[0].background.src, element, backgroundColor, MonksLittleDetails.updateSceneBackground);
             } else {
                 element.remove();
             }
@@ -917,7 +927,7 @@ Hooks.on("renderCompendium", (compendium, html, data) => {
 
                     const { entryId } = ev.currentTarget.closest('[data-entry-id]').dataset;
                     compendium.collection.getDocument(entryId).then(entry => {
-                        let img = entry.background.src;
+                        let img = entry.levels.sorted[0].background.src;
                         if (img) {
                             if (foundry.helpers.media.VideoHelper.hasVideoExtension(img))
                                 foundry.helpers.media.ImageHelper.createThumbnail(img, { width: entry.width, height: entry.height }).then(img => {
@@ -1020,7 +1030,7 @@ Hooks.on("getSceneControlButtons", (controls) => {
             name: "findtoken",
             title: "MonksLittleDetails.FindMyToken",
             icon: "fas fa-users-viewfinder",
-            onClick: async (away) => {
+            onChange: async (event, toggled) => {
                 //Find token
                 let tokens = canvas.tokens.ownedTokens;
                 if (tokens.length == 0) return;
@@ -1168,7 +1178,8 @@ Hooks.on("getActorContextOptions", (app, entries) => {
                     actors = [game.user.character];
 
                 for (let actor of actors) {
-                    actor.sheet._onDropActor({ preventDefault: () => { }, target: { closest: () => { return false } } }, from);
+                    if (actor)
+                        actor.sheet._onDropActor({ preventDefault: () => { }, target: { closest: () => { return false } } }, from);
                 }
             }
         });
@@ -1269,7 +1280,8 @@ Hooks.on("renderMainMenu", (app, html, data, options) => {
 });
 
 Hooks.on("changeSidebarTab", (tab) => {
-    game.user.setFlag("monks-little-details", "sidebar-tab", tab.tabName);
+    if (tab)
+        game.user.setFlag("monks-little-details", "sidebar-tab", tab.tabName);
 });
 
 Hooks.on("collapseSidebar", (app, collapse) => {

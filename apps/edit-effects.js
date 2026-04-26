@@ -53,11 +53,8 @@ export class EditEffects extends HandlebarsApplicationMixin(ApplicationV2) {
         let data = this.effects.filter(c => !!c.id && !!c.name);
         game.settings.set('monks-little-details', 'additional-effects', data);
 
-        for(let effect of data) {
-            CONFIG.statusEffects.findSplice(s => s.id === effect.id);
-        }
-
-        CONFIG.statusEffects = CONFIG.statusEffects.concat(data);
+        for (let effect of data)
+            CONFIG.statusEffects[effect.id] = effect;
 
         this.submitting = true;
     }

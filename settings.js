@@ -77,14 +77,14 @@ export const registerSettings = function () {
 		hint: i18n("MonksLittleDetails.alter-hud-colour.hint"),
 		scope: "world",
 		config: MonksLittleDetails.canDo("alter-hud"),
-		default: true,
+		default: game.system.id != "pf2e",
 		type: Boolean,
 	});
 	game.settings.register(modulename, "add-extra-statuses", {
 		name: i18n("MonksLittleDetails.add-extra-statuses.name"),
 		hint: i18n("MonksLittleDetails.add-extra-statuses.hint"),
 		scope: "world",
-		config: game.system.id != "pf2e",
+		config: true,
 		default: game.system.id == "dnd5e",
 		type: Boolean,
 		requiresReload: true

@@ -1,3 +1,21 @@
+# Version 14.01
+
+v14 Compatibility
+
+Restores additional statuses for PF2e.  They were removed on purpose... but I'm not sure what that purpose was.
+
+Fixed issue with accidentaly using the M key to move a token outside the scene boundary
+
+Fixed an issue where polymorphing to a player character was causing an problem
+
+Fixed an issue where changing the sidebar was causing a problem
+
+Added theme support for status panel
+
+Fixed column widths when using higher font sizes for the edit status window
+
+Added scroll to the update images when using higher font sizes
+
 # version 13.03
 
 Added size and position persisting to the Macro Edit window.  So you don't have to keep doing that any time you want to re-edi a macro
