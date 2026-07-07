@@ -210,18 +210,6 @@ export class MonksLittleDetails {
             return result;
         });
 
-        patchFunc("foundry.canvas.placeables.Token.prototype._getDragConstrainOptions", function (wrapped, ...args) {
-            let result = wrapped(...args);
-            let moveKey = MonksLittleDetails.getMoveKey();
-
-            if (game.user.isGM && moveKey && game.keyboard.downKeys.has(moveKey)) {
-                result.ignoreWalls = true; //ignore walls when moving tokens with the m key
-                result.ignoreCost = true; //ignore costs when moving tokens with the m key
-            }
-
-            return result;
-        });
-
         patchFunc("foundry.applications.apps.FilePicker.prototype._onSubmit", async (wrapped, ...args) => {
             let [ev] = args;
             let path = ev.target.file.value;
@@ -535,6 +523,16 @@ export class MonksLittleDetails {
             hint: 'MonksLittleDetails.movement-key.hint',
             editable: [{ key: 'KeyM' }],
             restricted: true,
+            onDown: () => {
+                MonksLittleDetails._priorUnconstrained = game.settings.get("core", "unconstrainedMovement");
+                if (!MonksLittleDetails._priorUnconstrained)
+                    game.settings.set("core", "unconstrainedMovement", true);
+            },
+            onUp: () => {
+                if (MonksLittleDetails._priorUnconstrained === false)
+                    game.settings.set("core", "unconstrainedMovement", false);
+                delete MonksLittleDetails._priorUnconstrained;
+            },
         });
 
         game.keybindings.register('monks-little-details', 'release-targets', {
